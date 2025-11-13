@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bullseye Tracker</title>
+    <style>
+        /* Styles simplifiés pour le popup d'historique */
+        body {
+            width: 300px; /* Réduit car il y a moins de contenu */
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
+            background-color: #f4f4f5;
+            padding: 16px;
+            color: #1a1a1a;
+        }
+        .container { display: flex; flex-direction: column; gap: 16px; }
+        .card {
+            background-color: #ffffff;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        h1 {
+            font-size: 1.25rem; /* 20px */
+            font-weight: 700;
+            text-align: center;
+            color: #dc2626; /* red-600 */
+            margin-bottom: 8px;
+        }
+        h2 {
+            font-size: 1.125rem; /* 18px */
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        /* Button Styles */
+        .btn {
+            width: 100%;
+            justify-content: center;
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-align: center;
+            border: 1px solid transparent;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn-secondary {
+            background-color: #ffffff;
+            color: #374151; /* gray-700 */
+            border-color: #d1d5db; /* gray-300 */
+        }
+        .btn-secondary:hover { background-color: #f9fafb; /* gray-50 */ }
+        
+        a {
+            color: #dc2626; /* red-600 */
+            text-decoration: none;
+            font-weight: 500;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* Quick History */
+        #quickHistory {
+            max-height: 200px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px; /* Augmenté l'écart */
+        }
+        #quickHistory .history-item {
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e5e7eb; /* gray-200 */
+        }
+        #quickHistory p { font-size: 0.875rem; margin-bottom: 4px; }
+        #quickHistory .history-date { font-weight: 500; }
+        #quickHistory .history-details { color: #4b5563; /* gray-600 */ }
+        #quickHistory .no-games { color: #6b7280; /* gray-500 */ }
+        
+        /* MODIFIÉ : Player Tag Styles */
+        .player-list {
+/* ... existing code ... -->
+            margin-top: 4px;
+        }
+        .player-tag {
+/* ... existing code ... -->
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        
+        /* AJOUT : Style pour les étiquettes de joueur cliquables */
+         .player-tag.clickable {
+            color: #dc2626; /* red-600 */
+            background-color: #fee2e2; /* red-100 */
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.2s, color 0.2s;
+         }
+         .player-tag.clickable:hover {
+            background-color: #dc2626; /* red-600 */
+            color: #ffffff; /* white */
+         }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bullseye Tracker</h1>
+        
+        <!-- Quick History -->
+        <div class="card">
+            <h2>Quick History (Auto-Saved)</h2>
+            <div id="quickHistory">
+                <p class="no-games">No games logged yet.</p>
+            </div>
+            <button id="viewAllHistory" class="btn btn-secondary" style="margin-top: 12px;">
+                View Full History
+            </button>
+        </div>
+    </div>
+    
+    <!-- Link to the JS file -->
+    <script src="popup.js"></script>
+</body>
+</html>

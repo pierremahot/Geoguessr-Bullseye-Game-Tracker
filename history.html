@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full Game History</title>
+    <style>
+         body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
+            background-color: #f4f4f5; /* gray-100 */
+            min-height: 100vh;
+            color: #1a1a1a;
+         }
+         .container {
+            max-width: 1024px; /* Augmenté pour plus d'espace */
+            margin: 0 auto;
+            padding: 24px;
+         }
+         .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+         }
+         h1 {
+            font-size: 1.875rem; /* 3xl */
+            font-weight: 700;
+            color: #111827; /* gray-900 */
+         }
+         .btn {
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border: 1px solid transparent;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: background-color 0.2s;
+         }
+         .btn-danger {
+            background-color: #dc2626; /* red-600 */
+            color: #ffffff;
+         }
+         .btn-danger:hover { background-color: #b91c1c; /* red-700 */ }
+         
+         a {
+            color: #dc2626; /* red-600 */
+            text-decoration: none;
+            font-weight: 500;
+         }
+         a:hover {
+            text-decoration: underline;
+         }
+
+         /* Table Styles */
+         .table-container {
+            background-color: #ffffff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow-x: auto; 
+         }
+         table {
+            min-width: 100%;
+            border-collapse: collapse;
+            border-spacing: 0;
+         }
+         thead {
+            background-color: #f9fafb; /* gray-50 */
+         }
+         th, td {
+            padding: 12px 24px; /* px-6 py-3 */
+            text-align: left;
+            font-size: 0.875rem; /* sm */
+         }
+         th {
+            font-weight: 500;
+            color: #6b7280; /* gray-500 */
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 0.75rem; /* xs */
+            white-space: nowrap;
+         }
+         /* AJOUT : Style pour le tri */
+         th.sortable {
+            cursor: pointer;
+            user-select: none;
+         }
+         th.sortable:hover {
+            color: #111827; /* gray-900 */
+         }
+         th .sort-arrow {
+            display: inline-block;
+            margin-left: 4px;
+            opacity: 0.3;
+         }
+         th.sort-asc .sort-arrow,
+         th.sort-desc .sort-arrow {
+             opacity: 1;
+         }
+         th.sort-desc .sort-arrow {
+             transform: rotate(180deg);
+         }
+
+         /* AJOUT : Style pour les filtres */
+         .filter-row input[type="text"] {
+             width: 100%;
+             box-sizing: border-box; /* S'assure que le padding ne casse pas la largeur */
+             padding: 6px 10px;
+             font-size: 0.875rem;
+             border: 1px solid #d1d5db; /* gray-300 */
+             border-radius: 4px;
+         }
+
+         tbody {
+            background-color: #ffffff;
+            border-top: 1px solid #e5e7eb; /* divide-y */
+         }
+         tr:not(:last-child) {
+            border-bottom: 1px solid #e5e7eb; /* divide-y */
+         }
+         td {
+            color: #4b5563; /* gray-500 */
+            white-space: nowrap;
+         }
+         td.font-medium {
+             font-weight: 500;
+             color: #111827; /* gray-900 */
+         }
+         td.text-right { text-align: right; }
+         
+         .status-badge {
+            padding: 2px 8px;
+            display: inline-flex;
+            font-size: 0.75rem;
+            font-weight: 600;
+            line-height: 1.25;
+            border-radius: 9999px;
+         }
+         .status-finished {
+            background-color: #dcfce7; /* green-100 */
+            color: #166534; /* green-800 */
+         }
+         .status-gaveup {
+            background-color: #fef9c3; /* yellow-100 */
+            color: #854d0e; /* yellow-800 */
+         }
+         
+         .delete-btn {
+            color: #dc2626; /* red-600 */
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+         }
+         .delete-btn:hover {
+            color: #991b1b; /* red-900 */
+         }
+
+         .player-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+         }
+         .player-tag {
+            background-color: #e5e7eb; /* gray-200 */
+            color: #374151; /* gray-700 */
+            padding: 2px 8px;
+            border-radius: 9999px; /* full pill */
+            font-size: 0.75rem; /* 12px */
+            font-weight: 500;
+            white-space: nowrap;
+         }
+
+         /* AJOUT : Style pour le pied de tableau (moyenne) */
+         tfoot {
+            background-color: #f9fafb; /* gray-50 */
+            border-top: 2px solid #e5e7eb; /* gray-200 */
+         }
+         tfoot td {
+            font-weight: 700;
+            font-size: 0.875rem;
+            color: #111827; /* gray-900 */
+         }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Full Game History</h1>
+            <button id="clearHistory" class="btn btn-danger">
+                Clear All History
+            </button>
+        </div>
+
+        <!-- History Table -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <!-- MODIFIÉ : Ajout des classes 'sortable' et data-sort-key -->
+                        <th class="sortable sort-desc" data-sort-key="date">
+                            Date <span class="sort-arrow">▼</span>
+                        </th>
+                        <th class="sortable" data-sort-key="players">
+                            Players <span class="sort-arrow">▼</span>
+                        </th>
+                        <th class="sortable" data-sort-key="score">
+                            Score <span class="sort-arrow">▼</span>
+                        </th>
+                        <th>Status</th>
+                        <th>Lien</th>
+                        <th style="text-align: right;">Actions</th>
+                    </tr>
+                    <!-- AJOUT : Ligne pour les filtres -->
+                    <tr class="filter-row">
+                        <td><input type="text" id="dateFilter" placeholder="Filtrer par date..."></td>
+                        <td><input type="text" id="playersFilter" placeholder="Filtrer par joueur..."></td>
+                        <td><input type="text" id="scoreFilter" placeholder="Filtrer par score..."></td>
+                        <td></td> <!-- Status filter (disabled) -->
+                        <td></td> <!-- Link filter (disabled) -->
+                        <td></td> <!-- Actions (disabled) -->
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody">
+                    <tr>
+                        <td colspan="6" style="text-align: center;">Loading history...</td>
+                    </tr>
+                </tbody>
+                <!-- AJOUT : Pied de tableau pour la moyenne -->
+                <tfoot>
+                    <tr>
+                        <td colspan="2" style="text-align: right; font-weight: 700;">Moyenne du score (filtré) :</td>
+                        <td id="averageScoreCell" colspan="4">0</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Link to the JS file -->
+    <script src="history.js"></script>
+</body>
+</html>
