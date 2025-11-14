@@ -14,6 +14,6 @@
     "chartjs-plugin-zoom": "^2.0.1"
   },
   "scripts": {
-    "build": "bun build ./stats.js --outdir ./dist --outfile stats.bundle.js"
+    "build": "bun build ./stats.js ./history.js ./popup.js --outdir ./dist"
   }
 }

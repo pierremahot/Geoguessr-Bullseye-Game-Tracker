@@ -1,4 +1,13 @@
-document.addEventListener('DOMContentLoaded', () => {
+import { Chart, registerables } from 'chart.js';
+import 'chartjs-adapter-date-fns';
+import zoomPlugin from 'chartjs-plugin-zoom';
+import { getAllGames } from './storage.js'; // <-- NOUVEL IMPORT
+
+// Enregistrer les plugins et les contrôleurs nécessaires
+Chart.register(...registerables, zoomPlugin);
+
+
+document.addEventListener('DOMContentLoaded', async () => { // <-- Passage en async
     // Récupérer le nom du joueur depuis l'URL (ex: ?player=Pierre%20MAHOT)
     const params = new URLSearchParams(window.location.search);
     const playerName = params.get('player');
@@ -11,25 +20,23 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('playerName').textContent = playerName;
 
     // Charger toutes les données de jeu
-    chrome.storage.local.get(['games'], (result) => {
-        const allGames = result.games || [];
-        
-        // Filtrer les parties pour n'inclure que celles de ce joueur
-        const playerGames = allGames.filter(game => 
-            Array.isArray(game.players) && game.players.includes(playerName)
-        );
+    const allGames = await getAllGames();
+    
+    // Filtrer les parties pour n'inclure que celles de ce joueur
+    const playerGames = allGames.filter(game => 
+        Array.isArray(game.players) && game.players.includes(playerName)
+    );
 
-        if (playerGames.length === 0) {
-            document.getElementById('playerName').textContent = `Aucune donnée pour ${playerName}`;
-            return;
-        }
+    if (playerGames.length === 0) {
+        document.getElementById('playerName').textContent = `Aucune donnée pour ${playerName}`;
+        return;
+    }
 
-        // Rendu des graphiques
-        renderAvgScoreDoughnut(playerGames);
-        renderScoreByPlayersBar(playerGames);
-        renderBestTeam(playerGames, playerName);
-        renderScoreOverTimeChart(playerGames);
-    });
+    // Rendu des graphiques
+    renderAvgScoreDoughnut(playerGames);
+    renderScoreByPlayersBar(playerGames);
+    renderBestTeam(playerGames, playerName);
+    renderScoreOverTimeChart(playerGames);
 });
 
 /**

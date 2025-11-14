@@ -1,4 +1,6 @@
-document.addEventListener('DOMContentLoaded', () => {
+import { getAllGames } from './storage.js';
+
+document.addEventListener('DOMContentLoaded', async () => {
     const tableBody = document.getElementById('historyTableBody');
     const clearHistoryBtn = document.getElementById('clearHistory');
 
@@ -18,11 +20,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Fonctions principales ---
 
     // 1. Charger l'historique complet
-    function loadFullHistory() {
-        chrome.storage.local.get(['games'], (result) => {
-            allGames = result.games || [];
-            applyFiltersAndRender();
-        });
+    async function loadFullHistory() {
+        allGames = await getAllGames();
+        applyFiltersAndRender();
     }
 
     // 2. NOUVEAU : Appliquer les filtres et le tri, puis afficher
