@@ -49,6 +49,14 @@ h2 {
     grid-column: 1 / -1; /* Prend toute la largeur sur les grands écrans */
 }
 
+/* AJOUT CRUCIAL : Conteneur pour les graphiques */
+.chart-container {
+    position: relative;
+    /* Hauteur par défaut pour les graphiques (camembert, barres) */
+    height: 300px; 
+    width: 100%;
+}
+
 /* Styles pour les stats "Meilleure Équipe" */
 .best-team-card {
     display: flex;

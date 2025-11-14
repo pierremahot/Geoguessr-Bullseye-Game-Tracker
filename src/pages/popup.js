@@ -3,6 +3,7 @@ import { getAllGames } from '../scripts/storage.js';
 document.addEventListener('DOMContentLoaded', async () => {
     const quickHistory = document.getElementById('quickHistory');
     const viewAllHistoryBtn = document.getElementById('viewAllHistory');
+    const viewLeaderboardBtn = document.getElementById('viewLeaderboard');
 
     // Fonction pour charger et afficher les 3 derniers matchs
     async function loadQuickHistory() {
@@ -48,8 +49,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Gérer le clic sur "View Full History"
-    viewAllHistoryBtn.addEventListener('click', () => {
-        chrome.tabs.create({ url: 'history.html' });
+    viewAllHistoryBtn.addEventListener('click', (e) => {
+        e.preventDefault(); // Empêcher le comportement par défaut du lien
+        chrome.tabs.create({ url: 'pages/history.html' });
+    });
+
+    // Gérer le clic sur "View Leaderboards"
+    viewLeaderboardBtn.addEventListener('click', (e) => {
+        e.preventDefault(); // Empêcher le comportement par défaut du lien
+        chrome.tabs.create({ url: 'pages/leaderboard.html' });
     });
 
     // Écouter les changements de stockage

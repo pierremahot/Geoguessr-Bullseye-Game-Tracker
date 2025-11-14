@@ -1,11 +1,29 @@
-import { Chart, registerables } from 'chart.js';
+import {
+    Chart,
+    LineController,
+    BarController,
+    DoughnutController,
+    CategoryScale,
+    LinearScale,
+    TimeScale,
+    PointElement,
+    LineElement,
+    BarElement,
+    ArcElement,
+    Legend,
+    Tooltip
+} from 'chart.js';
 import 'chartjs-adapter-date-fns';
 import zoomPlugin from 'chartjs-plugin-zoom';
 import { getAllGames } from '../scripts/storage.js';
 
 // Enregistrer les plugins et les contrôleurs nécessaires
-Chart.register(...registerables, zoomPlugin);
-
+Chart.register(
+    LineController, BarController, DoughnutController,
+    CategoryScale, LinearScale, TimeScale,
+    PointElement, LineElement, BarElement, ArcElement, // Éléments de base
+    Legend, Tooltip // Plugins de base
+);
 
 document.addEventListener('DOMContentLoaded', async () => { // <-- Passage en async
     // Récupérer le nom du joueur depuis l'URL (ex: ?player=Pierre%20MAHOT)
@@ -60,7 +78,8 @@ function renderAvgScoreDoughnut(games) {
             }]
         },
         options: {
-            responsive: true,
+            responsive: false, // DÉSACTIVÉ : Pour résoudre le conflit avec CSS Grid
+            maintainAspectRatio: false, // Empêche les conflits de redimensionnement
             plugins: {
                 legend: {
                     position: 'top',
@@ -111,7 +130,8 @@ function renderScoreByPlayersBar(games) {
             }]
         },
         options: {
-            responsive: true,
+            responsive: false, // DÉSACTIVÉ : Pour résoudre le conflit avec CSS Grid
+            maintainAspectRatio: false, // Empêche les conflits de redimensionnement
             scales: {
                 y: {
                     beginAtZero: true,
@@ -207,6 +227,7 @@ function renderScoreOverTimeChart(games) {
     new Chart(ctx, {
         type: 'line',
         data: {
+            // Le plugin de zoom est enregistré localement ici
             datasets: [{
                 label: 'Score Moyen par Jour',
                 data: data,
@@ -215,8 +236,10 @@ function renderScoreOverTimeChart(games) {
                 tension: 0.1
             }]
         },
+        plugins: [zoomPlugin], // <-- AJOUT CRUCIAL
         options: {
-            responsive: true,
+            // DÉSACTIVÉ : Le plugin de zoom peut entrer en conflit avec la gestion responsive native.
+            responsive: false, 
             scales: {
                 x: {
                     type: 'time',
