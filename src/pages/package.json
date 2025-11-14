@@ -1,0 +1,21 @@
+{
+  "name": "geoguessr-bullseye-game-tracker",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "bun-types": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "chart.js": "^4.4.3",
+    "chartjs-adapter-date-fns": "^3.0.0",
+    "chartjs-plugin-zoom": "^2.0.1"
+  },
+  "scripts": {
+    "build:js": "bun build ./src/pages/stats.js ./src/pages/history.js ./src/pages/popup.js --outdir ./dist/pages && bun build ./src/scripts/content.js --outdir ./dist/scripts",
+    "build:copy": "cp ./src/manifest.json ./dist/ && cp -r ./src/pages/*.html ./dist/pages/ && cp -r ./src/pages/*.css ./dist/pages/ && cp -r ./src/icons ./dist/",
+    "build": "rm -rf ./dist && mkdir -p ./dist/pages && mkdir -p ./dist/scripts && bun run build:js && bun run build:copy"
+  }
+}

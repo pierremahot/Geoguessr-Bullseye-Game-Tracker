@@ -1,7 +1,7 @@
 import { Chart, registerables } from 'chart.js';
 import 'chartjs-adapter-date-fns';
 import zoomPlugin from 'chartjs-plugin-zoom';
-import { getAllGames } from './storage.js'; // <-- NOUVEL IMPORT
+import { getAllGames } from '../scripts/storage.js';
 
 // Enregistrer les plugins et les contrôleurs nécessaires
 Chart.register(...registerables, zoomPlugin);

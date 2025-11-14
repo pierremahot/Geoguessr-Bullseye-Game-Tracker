@@ -1,4 +1,4 @@
-import { getAllGames } from './storage.js';
+import { getAllGames } from '../scripts/storage.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     const tableBody = document.getElementById('historyTableBody');
