@@ -1,4 +1,4 @@
-import { getAllGames } from '../scripts/storage.js';
+import { getAllGames, deleteGameById, clearAllGames } from '../scripts/storage.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     const tableBody = document.getElementById('historyTableBody');
@@ -102,8 +102,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             let playersHtml = 'No players found';
             if (Array.isArray(game.players) && game.players.length > 0) {
                 // MODIFIÉ : Transformer les joueurs en liens vers stats.html
-                playersHtml = game.players.map(p => 
-                    `<a href="stats.html?player=${encodeURIComponent(p)}" target="_blank" class="player-tag clickable">${p}</a>`
+                const statsPageUrl = chrome.runtime.getURL('pages/stats.html');
+                playersHtml = game.players.map(p =>
+                    `<a href="${statsPageUrl}?player=${encodeURIComponent(p)}" target="_blank" class="player-tag clickable">${p}</a>`
                 ).join(' ');
             } else if (typeof game.players === 'string' && game.players) {
                 // Gérer l'ancien format (non cliquable)
@@ -173,26 +174,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // Écouteur pour "Clear All History"
-    clearHistoryBtn.addEventListener('click', () => {
-        chrome.storage.local.set({ games: [] }, () => {
-            allGames = []; // Mettre à jour l'état global
-            applyFiltersAndRender(); // Re-calculer
-        });
+    clearHistoryBtn.addEventListener('click', async () => {
+        if (confirm('Êtes-vous sûr de vouloir supprimer tout l\'historique ? Cette action est irréversible.')) {
+            await clearAllGames();
+            // Le listener `chrome.storage.onChanged` s'occupera de la mise à jour de l'UI.
+        }
     });
 
     // Écouteur pour la suppression (délégation)
-    tableBody.addEventListener('click', (e) => {
+    tableBody.addEventListener('click', async (e) => {
         if (e.target.classList.contains('delete-btn')) {
             const gameId = e.target.getAttribute('data-id');
-            chrome.storage.local.get(['games'], (result) => {
-                let games = result.games || [];
-                const updatedGames = games.filter(game => game.id !== gameId);
-                
-                chrome.storage.local.set({ games: updatedGames }, () => {
-                    allGames = updatedGames; // Mettre à jour l'état global
-                    applyFiltersAndRender(); // Re-calculer
-                });
-            });
+            await deleteGameById(gameId);
+            // Le listener `chrome.storage.onChanged` s'occupera de la mise à jour de l'UI.
         }
     });
 

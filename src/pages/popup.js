@@ -27,9 +27,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             // MODIFIÉ : Gérer l'affichage des joueurs
             let playersHtml = 'No players found';
             if (Array.isArray(game.players) && game.players.length > 0) {
+                const statsPageUrl = chrome.runtime.getURL('pages/stats.html');
                 // C'est un tableau (nouvelle méthode) -> Rendre cliquable
                 playersHtml = game.players.map(p => 
-                    `<a href="stats.html?player=${encodeURIComponent(p)}" target="_blank" class="player-tag clickable">${p}</a>`
+                    `<a href="${statsPageUrl}?player=${encodeURIComponent(p)}" target="_blank" class="player-tag clickable">${p}</a>`
                 ).join(' ');
             } else if (typeof game.players === 'string' && game.players) {
                 // C'est une chaîne (ancienne méthode)
