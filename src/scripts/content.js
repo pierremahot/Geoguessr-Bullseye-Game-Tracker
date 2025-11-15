@@ -113,15 +113,21 @@ function startObserver() {
                 for (const node of mutation.addedNodes) {
                     if (node.nodeType === 1) { // Vérifier si c'est un élément
                          // Nous cherchons le conteneur de fin de partie.
-                         // Ces classes peuvent changer lors des mises à jour de GeoGuessr !
+                         // --- DÉTECTION DE FIN DE PARTIE ---
                         const endScreenSelector = '.game-finished_container__TEK6Q';
                         if (node.querySelector(endScreenSelector) || node.classList.contains(endScreenSelector.substring(1))) {
-                            // L'écran de fin est apparu !
                             scrapeAndSave();
-                            // On pourrait arrêter l'observateur, mais on le laisse actif
-                            // si l'utilisateur lance une autre partie sans recharger la page.
-                            hasGameBeenSaved = false; // Réinitialiser pour la prochaine partie
                             return;
+                        }
+
+                        const finishButtonSelector = 'button.button_variantPrimary__u3WzI';
+                        const finishButton = node.querySelector(finishButtonSelector) || (node.matches && node.matches(finishButtonSelector) ? node : null);
+
+                        if (finishButton && finishButton.innerText.includes('Finish game')) {
+                            console.log('Bullseye Tracker: Bouton "Finish game" détecté. Ajout du listener.');
+                            finishButton.addEventListener('click', () => {
+                                setTimeout(scrapeAndSave, 500); // Attendre 500ms que l'UI se mette à jour
+                            }, { once: true }); // Le listener ne s'exécutera qu'une fois
                         }
                     }
                 }
@@ -133,5 +139,29 @@ function startObserver() {
     observer.observe(targetNode, config);
 }
 
+// 3. Fonction pour surveiller les changements d'URL
+function startUrlObserver() {
+    // Pour les Single Page Applications, nous devons surveiller les changements d'URL manuels.
+    let lastUrl = location.href; 
+    new MutationObserver(() => {
+      const url = location.href;
+      if (url !== lastUrl) {
+        lastUrl = url;
+        onUrlChange(url);
+      }
+    }).observe(document, {subtree: true, childList: true});
+ 
+    function onUrlChange(newUrl) {
+        console.log('Bullseye Tracker: Changement d\'URL détecté ->', newUrl);
+
+        // Si on arrive sur la page /party, on réinitialise le drapeau
+        if (newUrl.includes('/party')) {
+            console.log('Bullseye Tracker: Retour au lobby détecté. Prêt pour la prochaine partie.');
+            hasGameBeenSaved = false;
+        }
+    }
+}
+
 // Démarrer l'observateur
 startObserver();
+startUrlObserver(); // Démarrer la surveillance de l'URL
