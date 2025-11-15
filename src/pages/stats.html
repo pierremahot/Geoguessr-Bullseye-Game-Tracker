@@ -4,12 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Statistiques du Joueur</title>
-    <!-- CSS externalisé -->
     <link rel="stylesheet" href="stats.css">
 </head>
 <body>
     <div class="container">
-        <h1>Statistiques pour <span id="playerName">...</span></h1>
+        <header class="page-header">
+            <h1>Statistiques pour <span id="playerName">...</span></h1>
+            <nav class="header-nav">
+                <a href="leaderboard.html" class="btn btn-secondary">Voir les Leaderboards</a>
+                <a href="history.html" class="btn btn-secondary">Retour à l'Historique</a>
+            </nav>
+        </header>
 
         <div class="stats-grid">
             <!-- Camembert Moyenne Générale -->
@@ -49,8 +54,6 @@
         </div>
     </div>
 
-    <!-- Script "bundlé" contenant Chart.js et la logique de la page -->
-    <!-- Ce fichier est généré par la commande 'bun run build' -->
     <script src="stats.js"></script>
 </body>
 </html>

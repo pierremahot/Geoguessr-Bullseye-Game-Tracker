@@ -39,8 +39,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             gameEl.innerHTML = `
-                <p class="history-date">${new Date(game.date).toLocaleDateString()}</p>
+                <p class="history-date">${new Date(game.date).toLocaleString()}</p>
                 <div class="history-details player-list">${playersHtml}</div>
+                <p class="history-details">Map: ${game.mapName || 'Inconnue'}</p>
                 <p class="history-details">Score: ${game.score} ${game.gaveUp ? '(Gave Up)' : ''}</p>
                 ${gameLink}
             `;

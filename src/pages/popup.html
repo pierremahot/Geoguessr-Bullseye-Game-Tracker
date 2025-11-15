@@ -8,27 +8,30 @@
 </head>
 <body>
     <div class="container">
-        <h1>Bullseye Tracker</h1>
-        
-        <!-- Quick History -->
-        <div class="card">
-            <h2>Quick History (Auto-Saved)</h2>
-            <div id="quickHistory">
-                <p class="no-games">No games logged yet.</p>
+        <header class="header">
+            <img src="../icons/icon48.png" alt="Bullseye Tracker Icon" class="logo">
+            <h1>Bullseye Tracker</h1>
+        </header>
+
+        <main>
+            <div class="card">
+                <h2>Quick History</h2>
+                <div id="quickHistory">
+                    <p class="no-games">No games logged yet.</p>
+                </div>
             </div>
-            <div class="card-actions" style="margin-top: 12px; display: flex; gap: 8px;">
-                <a href="history.html" id="viewAllHistory" class="btn btn-secondary" style="flex: 1;">
-                    View Full History
-                </a>
-                <a href="leaderboard.html" id="viewLeaderboard" class="btn btn-secondary" style="flex: 1;">
-                    View Leaderboards
-                </a>
-            </div>
-        </div>
+        </main>
+
+        <footer class="footer-nav">
+            <a href="history.html" id="viewAllHistory" class="btn btn-secondary">
+                View Full History
+            </a>
+            <a href="leaderboard.html" id="viewLeaderboard" class="btn btn-secondary">
+                View Leaderboards
+            </a>
+        </footer>
     </div>
     
-    <!-- Link to the JS file -->
-    <!-- Ce fichier est généré par la commande 'bun run build' -->
     <script src="popup.js"></script>
 </body>
 </html>

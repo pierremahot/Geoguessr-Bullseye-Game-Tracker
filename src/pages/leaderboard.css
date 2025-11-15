@@ -1,7 +1,7 @@
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
-    background-color: #1c1c1e; /* Dark mode background */
-    color: #f2f2f7; /* Light text */
+    background-color: #f4f4f5; /* gray-100 */
+    color: #111827; /* gray-900 */
     margin: 0;
     min-height: 100vh;
 }
@@ -18,12 +18,13 @@ body {
     align-items: center;
     margin-bottom: 24px;
     padding-bottom: 16px;
-    border-bottom: 1px solid #3a3a3c;
+    border-bottom: 1px solid #d1d5db; /* gray-300 */
 }
 
 h1 {
     font-size: 1.875rem;
     font-weight: 700;
+    margin: 0;
 }
 
 .btn {
@@ -36,14 +37,16 @@ h1 {
     transition: background-color 0.2s, color 0.2s;
     text-decoration: none;
     display: inline-block;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 .btn-secondary {
-    background-color: #3a3a3c;
-    color: #f2f2f7;
+    background-color: #ffffff;
+    color: #374151; /* gray-700 */
+    border-color: #d1d5db; /* gray-300 */
 }
 .btn-secondary:hover {
-    background-color: #48484a;
+    background-color: #f9fafb; /* gray-50 */
 }
 
 .leaderboards-grid {
@@ -53,23 +56,24 @@ h1 {
 }
 
 .card {
+    background-color: #ffffff;
+    border-radius: 8px;
     padding: 1.5rem;
-    background-color: #2c2c2e;
-    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .card h3 {
     margin-top: 0;
     margin-bottom: 1rem;
-    border-bottom: 1px solid #444;
-    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e5e7eb; /* gray-200 */
+    padding-bottom: 0.75rem;
     font-size: 1.25rem;
 }
 
 .card h3 small {
     font-weight: 400;
     font-size: 0.9rem;
-    color: #8e8e93;
+    color: #6b7280; /* gray-500 */
 }
 
 .card ol {
@@ -82,7 +86,7 @@ h1 {
     justify-content: space-between;
     align-items: center;
     padding: 0.75rem 0;
-    border-bottom: 1px solid #3a3a3c;
+    border-bottom: 1px solid #e5e7eb; /* gray-200 */
 }
 
 .card li:last-child {
@@ -90,7 +94,7 @@ h1 {
 }
 
 .leaderboard-name a {
-    color: #0a84ff; /* Apple's blue for links */
+    color: #dc2626; /* red-600 */
     text-decoration: none;
     font-weight: 500;
 }
@@ -100,19 +104,19 @@ h1 {
 
 .leaderboard-score {
     font-weight: 700;
-    color: #fff;
+    color: #111827; /* gray-900 */
     white-space: nowrap;
     margin-left: 1rem;
 }
 
 .leaderboard-score small {
     font-weight: 400;
-    color: #8e8e93;
+    color: #6b7280; /* gray-500 */
 }
 
 .loading {
     list-style: none;
-    color: #8e8e93;
+    color: #6b7280; /* gray-500 */
 }
 
 .map-leaderboards-container {
@@ -123,11 +127,11 @@ h1 {
     font-size: 1.75rem;
     margin-bottom: 24px;
     padding-bottom: 16px;
-    border-bottom: 1px solid #3a3a3c;
+    border-bottom: 1px solid #d1d5db; /* gray-300 */
 }
 
 .sub-leaderboard h4 {
     font-size: 1rem;
-    color: #aeaeb2;
+    color: #4b5563; /* gray-600 */
     margin-bottom: 0.5rem;
 }
