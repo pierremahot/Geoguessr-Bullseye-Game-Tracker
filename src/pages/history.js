@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // NOUVEAU : Références pour les filtres et la moyenne
     const dateFilter = document.getElementById('dateFilter');
     const playersFilter = document.getElementById('playersFilter');
+    const mapFilter = document.getElementById('mapFilter'); // <-- NOUVEAU
     const scoreFilter = document.getElementById('scoreFilter');
     const averageScoreCell = document.getElementById('averageScoreCell');
 
@@ -30,6 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Obtenir les valeurs des filtres
         const dateValue = dateFilter.value.toLowerCase();
         const playersValue = playersFilter.value.toLowerCase();
+        const mapValue = mapFilter.value.toLowerCase(); // <-- NOUVEAU
         const scoreValue = scoreFilter.value.toLowerCase();
 
         // Filtrer les jeux
@@ -38,12 +40,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             const playerMatch = game.players.some(p => 
                 p.toLowerCase().includes(playersValue)
             );
+            // Filtre Carte (gère les anciennes parties sans mapName)
+            const mapName = game.mapName || '';
+            const mapMatch = mapName.toLowerCase().includes(mapValue);
             // Filtre Date
             const dateMatch = new Date(game.date).toLocaleString().toLowerCase().includes(dateValue);
             // Filtre Score
             const scoreMatch = game.score.toString().includes(scoreValue);
 
-            return playerMatch && dateMatch && scoreMatch;
+            return playerMatch && mapMatch && dateMatch && scoreMatch;
         });
 
         // Trier les jeux filtrés
@@ -63,6 +68,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     // Trie par le premier joueur de la liste
                     valA = (a.players[0] || '').toLowerCase();
                     valB = (b.players[0] || '').toLowerCase();
+                    break;
+                case 'map': // <-- NOUVEAU
+                    valA = (a.mapName || '').toLowerCase();
+                    valB = (b.mapName || '').toLowerCase();
                     break;
                 default:
                     return 0;
@@ -86,7 +95,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 3. Afficher la table (maintenant avec les jeux filtrés/triés)
     function renderTable(games) {
         if (!games || games.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No matching games found.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No matching games found.</td></tr>';
             return;
         }
 
@@ -114,6 +123,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             row.innerHTML = `
                 <td class="font-medium">${new Date(game.date).toLocaleString()}</td>
                 <td><div class="player-list">${playersHtml}</div></td>
+                <td>${game.mapName || 'Inconnue'}</td>
                 <td>${game.score}</td>
                 <td>
                     ${game.gaveUp 
@@ -155,7 +165,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- Écouteurs d'événements ---
 
     // Écouteurs pour les filtres
-    [dateFilter, playersFilter, scoreFilter].forEach(filter => {
+    [dateFilter, playersFilter, mapFilter, scoreFilter].forEach(filter => {
         filter.addEventListener('input', applyFiltersAndRender);
     });
 

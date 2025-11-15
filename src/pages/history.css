@@ -74,6 +74,10 @@
     font-size: 0.75rem; /* xs */
     white-space: nowrap;
  }
+ /* NOUVEAU : Donner une largeur minimale à certaines colonnes pour une meilleure lisibilité */
+ th[data-sort-key="map"], th[data-sort-key="players"] {
+    min-width: 150px;
+ }
  /* AJOUT : Style pour le tri */
  th.sortable {
     cursor: pointer;

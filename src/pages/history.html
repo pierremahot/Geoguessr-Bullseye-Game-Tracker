@@ -30,6 +30,8 @@
                         <th class="sortable" data-sort-key="players">
                             Players <span class="sort-arrow">▼</span>
                         </th>
+                        <!-- NOUVEAU : Colonne pour la carte -->
+                        <th class="sortable" data-sort-key="map">Map <span class="sort-arrow">▼</span></th>
                         <th class="sortable" data-sort-key="score">
                             Score <span class="sort-arrow">▼</span>
                         </th>
@@ -41,6 +43,7 @@
                     <tr class="filter-row">
                         <td><input type="text" id="dateFilter" placeholder="Filtrer par date..."></td>
                         <td><input type="text" id="playersFilter" placeholder="Filtrer par joueur..."></td>
+                        <td><input type="text" id="mapFilter" placeholder="Filtrer par carte..."></td>
                         <td><input type="text" id="scoreFilter" placeholder="Filtrer par score..."></td>
                         <td></td> <!-- Status filter (disabled) -->
                         <td></td> <!-- Link filter (disabled) -->
@@ -55,7 +58,7 @@
                 <!-- AJOUT : Pied de tableau pour la moyenne -->
                 <tfoot>
                     <tr>
-                        <td colspan="2" style="text-align: right; font-weight: 700;">Moyenne du score (filtré) :</td>
+                        <td colspan="3" style="text-align: right; font-weight: 700;">Moyenne du score (filtré) :</td>
                         <td id="averageScoreCell" colspan="4">0</td>
                     </tr>
                 </tfoot>

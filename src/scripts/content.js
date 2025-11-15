@@ -14,6 +14,7 @@ function scrapeAndSave() {
     let score = 0;
     let gameId = null;
     let gameUrl = window.location.href; 
+    let mapName = 'Inconnue'; // Valeur par défaut
 
     try {
         // --- Récupérer les joueurs et l'ID de la partie depuis __NEXT_DATA__ (Stable) ---
@@ -33,6 +34,14 @@ function scrapeAndSave() {
                  gameId = `game_${new Date().getTime()}`; // ID de secours
             }
 
+            // --- NOUVEAU : Récupérer le nom de la carte ---
+            // Le nom de la carte se trouve aussi dans les données de la page
+            const mapSlug = data?.props?.pageProps?.lobbyToJoin?.gameOptions?.mapSlug;
+            if (mapSlug) {
+                mapName = mapSlug;
+            } else {
+                console.warn('Bullseye Tracker: Nom de la carte introuvable dans __NEXT_DATA__.');
+            }
         } else {
             console.warn('Bullseye Tracker: __NEXT_DATA__ introuvable.');
         }
@@ -60,6 +69,7 @@ function scrapeAndSave() {
             date: new Date().toISOString(),
             players: players, // Sera un tableau
             score: score, // Sera le score correct
+            mapName: mapName, // <-- NOUVEAU : Nom de la carte ajouté
             gaveUp: false, 
             url: gameUrl 
         };

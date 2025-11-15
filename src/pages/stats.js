@@ -51,10 +51,12 @@ document.addEventListener('DOMContentLoaded', async () => { // <-- Passage en as
     }
 
     // Rendu des graphiques
+    console.log(playerGames);
     renderAvgScoreDoughnut(playerGames);
     renderScoreByPlayersBar(playerGames);
     renderBestTeam(playerGames, playerName);
     renderScoreOverTimeChart(playerGames);
+    renderScoreByMapBar(playerGames); // <-- NOUVEAU GRAPHIQUE
 });
 
 /**
@@ -66,12 +68,14 @@ function renderAvgScoreDoughnut(games) {
     const totalScore = games.reduce((sum, game) => sum + game.score, 0);
     const avgScore = Math.round(totalScore / games.length);
     const remainingScore = 25000 - avgScore;
+    console.log(avgScore, remainingScore, totalScore,ctx);
 
     new Chart(ctx, {
         type: 'doughnut',
         data: {
             labels: ['Score Moyen', 'Points Restants'],
             datasets: [{
+                label: 'socre Dataset',
                 data: [avgScore, remainingScore],
                 backgroundColor: ['#ef4444', '#374151'], // red-500, gray-700
                 borderColor: '#1f2937' // gray-800 (fond de la carte)
@@ -91,6 +95,59 @@ function renderAvgScoreDoughnut(games) {
                     }
                 }
             }
+        }
+    });
+}
+
+/**
+ * Affiche le graphique en barres des scores moyens par carte.
+ */
+function renderScoreByMapBar(games) {
+    const ctx = document.getElementById('scoreByMapChart')?.getContext('2d');
+    // S'assurer que l'élément canvas existe avant de continuer
+    if (!ctx) {
+        console.warn("L'élément canvas 'scoreByMapChart' n'a pas été trouvé.");
+        return;
+    }
+
+    const scoresByMap = {}; // ex: { "A Diverse World": { total: 5000, count: 1 }, ... }
+
+    games.forEach(game => {
+        // Utiliser 'Inconnue' si le nom de la carte n'est pas défini (pour les anciennes parties)
+        const mapName = game.mapName || 'Inconnue';
+        if (!scoresByMap[mapName]) {
+            scoresByMap[mapName] = { total: 0, count: 0 };
+        }
+        scoresByMap[mapName].total += game.score;
+        scoresByMap[mapName].count++;
+    });
+
+    const labels = Object.keys(scoresByMap);
+    const data = labels.map(mapName => {
+        return Math.round(scoresByMap[mapName].total / scoresByMap[mapName].count);
+    });
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Score Moyen par Carte',
+                data: data,
+                backgroundColor: '#16a34a', // green-600
+                borderColor: '#22c55e', // green-500
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: false,
+            maintainAspectRatio: false,
+            indexAxis: 'y', // <-- Affiche les barres horizontalement pour une meilleure lisibilité des noms de cartes
+            scales: {
+                x: { beginAtZero: true, max: 25000, ticks: { color: '#9ca3af' }, grid: { color: '#374151' } },
+                y: { ticks: { color: '#9ca3af' }, grid: { display: false } }
+            },
+            plugins: { legend: { display: false } }
         }
     });
 }
