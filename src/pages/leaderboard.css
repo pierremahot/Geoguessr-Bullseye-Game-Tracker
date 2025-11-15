@@ -66,6 +66,12 @@ h1 {
     font-size: 1.25rem;
 }
 
+.card h3 small {
+    font-weight: 400;
+    font-size: 0.9rem;
+    color: #8e8e93;
+}
+
 .card ol {
     padding-left: 20px;
     margin: 0;
@@ -107,4 +113,21 @@ h1 {
 .loading {
     list-style: none;
     color: #8e8e93;
+}
+
+.map-leaderboards-container {
+    margin-top: 48px;
+}
+
+.section-title {
+    font-size: 1.75rem;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #3a3a3c;
+}
+
+.sub-leaderboard h4 {
+    font-size: 1rem;
+    color: #aeaeb2;
+    margin-bottom: 0.5rem;
 }
