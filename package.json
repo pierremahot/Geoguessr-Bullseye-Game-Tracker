@@ -9,9 +9,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "chart.js": "^4.4.3",
-    "chartjs-adapter-date-fns": "^3.0.0",
-    "chartjs-plugin-zoom": "^2.0.1"
+    "apexcharts": "^3.49.1"
   },
   "scripts": {
     "build:js": "bun build ./src/pages/stats.js ./src/pages/history.js ./src/pages/popup.js ./src/pages/leaderboard.js --outdir ./dist/pages && bun build ./src/scripts/content.js --outdir ./dist/scripts",

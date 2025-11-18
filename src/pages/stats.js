@@ -1,29 +1,15 @@
-import {
-    Chart,
-    LineController,
-    BarController,
-    DoughnutController,
-    CategoryScale,
-    LinearScale,
-    TimeScale,
-    PointElement,
-    LineElement,
-    BarElement,
-    ArcElement,
-    Legend,
-    Tooltip
-} from 'chart.js';
-import 'chartjs-adapter-date-fns';
-import zoomPlugin from 'chartjs-plugin-zoom';
+import ApexCharts from 'apexcharts';
 import { getAllGames } from '../scripts/storage.js';
 
-// Enregistrer les plugins et les contrôleurs nécessaires
-Chart.register(
-    LineController, BarController, DoughnutController,
-    CategoryScale, LinearScale, TimeScale,
-    PointElement, LineElement, BarElement, ArcElement, // Éléments de base
-    Legend, Tooltip // Plugins de base
-);
+// Thème global pour les graphiques en mode sombre
+const chartTheme = {
+    theme: { mode: 'dark' },
+    chart: { background: 'transparent' },
+    grid: { borderColor: '#374151' }, // gray-700
+    xaxis: { labels: { style: { colors: '#9ca3af' } } }, // gray-400
+    yaxis: { labels: { style: { colors: '#9ca3af' } } }, // gray-400
+    tooltip: { theme: 'dark' }
+};
 
 document.addEventListener('DOMContentLoaded', async () => { // <-- Passage en async
     // Récupérer le nom du joueur depuis l'URL (ex: ?player=Pierre%20MAHOT)
@@ -64,48 +50,39 @@ document.addEventListener('DOMContentLoaded', async () => { // <-- Passage en as
  * Utilise un graphique en anneau (doughnut) pour montrer le score / 25000.
  */
 function renderAvgScoreDoughnut(games) {
-    const ctx = document.getElementById('avgScoreChart').getContext('2d');
+    const chartEl = document.getElementById('avgScoreChart');
     const totalScore = games.reduce((sum, game) => sum + game.score, 0);
     const avgScore = Math.round(totalScore / games.length);
     const remainingScore = 25000 - avgScore;
-    console.log(avgScore, remainingScore, totalScore,ctx);
 
-    new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Score Moyen', 'Points Restants'],
-            datasets: [{
-                label: 'socre Dataset',
-                data: [avgScore, remainingScore],
-                backgroundColor: ['#ef4444', '#374151'], // red-500, gray-700
-                borderColor: '#1f2937' // gray-800 (fond de la carte)
-            }]
+    const options = {
+        ...chartTheme,
+        series: [avgScore, remainingScore],
+        chart: { ...chartTheme.chart, type: 'donut', height: '100%' },
+        labels: ['Score Moyen', 'Points Restants'],
+        colors: ['#ef4444', '#374151'], // red-500, gray-700
+        stroke: { colors: ['#1f2937'] }, // gray-800 (fond de la carte)
+        legend: {
+            position: 'top',
+            labels: { colors: '#374151' } // Utilisation d'un gris foncé (gray-700) pour la lisibilité
         },
-        options: {
-            responsive: false, // DÉSACTIVÉ : Pour résoudre le conflit avec CSS Grid
-            maintainAspectRatio: false, // Empêche les conflits de redimensionnement
-            plugins: {
-                legend: {
-                    position: 'top',
-                    labels: { color: '#f3f4f6' }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: (context) => `${context.label}: ${context.raw.toLocaleString()} pts`
-                    }
-                }
-            }
+        dataLabels: { enabled: false },
+        tooltip: {
+            y: { formatter: (val) => `${val.toLocaleString()} pts` }
         }
-    });
+    };
+
+    const chart = new ApexCharts(chartEl, options);
+    chart.render();
 }
 
 /**
  * Affiche le graphique en barres des scores moyens par carte.
  */
 function renderScoreByMapBar(games) {
-    const ctx = document.getElementById('scoreByMapChart')?.getContext('2d');
+    const chartEl = document.getElementById('scoreByMapChart');
     // S'assurer que l'élément canvas existe avant de continuer
-    if (!ctx) {
+    if (!chartEl) {
         console.warn("L'élément canvas 'scoreByMapChart' n'a pas été trouvé.");
         return;
     }
@@ -127,36 +104,31 @@ function renderScoreByMapBar(games) {
         return Math.round(scoresByMap[mapName].total / scoresByMap[mapName].count);
     });
 
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Score Moyen par Carte',
-                data: data,
-                backgroundColor: '#16a34a', // green-600
-                borderColor: '#22c55e', // green-500
-                borderWidth: 1
-            }]
+    const options = {
+        ...chartTheme,
+        series: [{ name: 'Score Moyen par Carte', data: data }],
+        chart: { ...chartTheme.chart, type: 'bar', height: '100%' },
+        plotOptions: { bar: { horizontal: true } },
+        colors: ['#16a34a'], // green-600
+        xaxis: {
+            ...chartTheme.xaxis,
+            categories: labels,
+            min: 0,
+            max: 25000,
+            title: { text: 'Score Moyen' }
         },
-        options: {
-            responsive: false,
-            maintainAspectRatio: false,
-            indexAxis: 'y', // <-- Affiche les barres horizontalement pour une meilleure lisibilité des noms de cartes
-            scales: {
-                x: { beginAtZero: true, max: 25000, ticks: { color: '#9ca3af' }, grid: { color: '#374151' } },
-                y: { ticks: { color: '#9ca3af' }, grid: { display: false } }
-            },
-            plugins: { legend: { display: false } }
-        }
-    });
+        legend: { show: false }
+    };
+
+    const chart = new ApexCharts(chartEl, options);
+    chart.render();
 }
 
 /**
  * Affiche le graphique en barres des scores moyens par nombre de joueurs.
  */
 function renderScoreByPlayersBar(games) {
-    const ctx = document.getElementById('scoreByPlayersChart').getContext('2d');
+    const chartEl = document.getElementById('scoreByPlayersChart');
     
     const scoresByPlayerCount = {}; // ex: { 2: { total: 5000, count: 1 }, 3: { ... } }
 
@@ -174,38 +146,26 @@ function renderScoreByPlayersBar(games) {
         return Math.round(scoresByPlayerCount[count].total / scoresByPlayerCount[count].count);
     });
 
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Score Moyen',
-                data: data,
-                backgroundColor: '#dc2626', // red-600
-                borderColor: '#ef4444', // red-500
-                borderWidth: 1
-            }]
+    const options = {
+        ...chartTheme,
+        series: [{ name: 'Score Moyen', data: data }],
+        chart: { ...chartTheme.chart, type: 'bar', height: '100%' },
+        colors: ['#dc2626'], // red-600
+        xaxis: {
+            ...chartTheme.xaxis,
+            categories: labels
         },
-        options: {
-            responsive: false, // DÉSACTIVÉ : Pour résoudre le conflit avec CSS Grid
-            maintainAspectRatio: false, // Empêche les conflits de redimensionnement
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 25000,
-                    ticks: { color: '#9ca3af' }, // gray-400
-                    grid: { color: '#374151' } // gray-700
-                },
-                x: {
-                    ticks: { color: '#9ca3af' }, // gray-400
-                    grid: { display: false }
-                }
-            },
-            plugins: {
-                legend: { display: false }
-            }
-        }
-    });
+        yaxis: {
+            ...chartTheme.yaxis,
+            min: 0,
+            max: 25000,
+            title: { text: 'Score Moyen' }
+        },
+        legend: { show: false }
+    };
+
+    const chart = new ApexCharts(chartEl, options);
+    chart.render();
 }
 
 /**
@@ -261,7 +221,7 @@ function renderBestTeam(games, currentPlayerName) {
  * Affiche le graphique en ligne de l'évolution du score moyen par jour.
  */
 function renderScoreOverTimeChart(games) {
-    const ctx = document.getElementById('scoreOverTimeChart').getContext('2d');
+    const chartEl = document.getElementById('scoreOverTimeChart');
 
     const scoresByDay = {}; // ex: { '2025-11-10': { total: 5000, count: 1 }, ... }
 
@@ -281,59 +241,37 @@ function renderScoreOverTimeChart(games) {
         };
     });
 
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            // Le plugin de zoom est enregistré localement ici
-            datasets: [{
-                label: 'Score Moyen par Jour',
-                data: data,
-                fill: false,
-                borderColor: '#ef4444', // red-500
-                tension: 0.1
-            }]
-        },
-        plugins: [zoomPlugin], // <-- AJOUT CRUCIAL
-        options: {
-            // DÉSACTIVÉ : Le plugin de zoom peut entrer en conflit avec la gestion responsive native.
-            responsive: false, 
-            scales: {
-                x: {
-                    type: 'time',
-                    time: {
-                        unit: 'day',
-                        parser: 'yyyy-MM-dd',
-                        tooltipFormat: 'PP' // Format 'Nov 13, 2025'
-                    },
-                    ticks: { color: '#9ca3af' }, // gray-400
-                    grid: { color: '#374151' } // gray-700
-                },
-                y: {
-                    beginAtZero: true,
-                    max: 25000,
-                    ticks: { color: '#9ca3af' }, // gray-400
-                    grid: { color: '#374151' } // gray-700
-                }
-            },
-            plugins: {
-                legend: { display: false },
-                // Activer le zoom et le panoramique
-                zoom: {
-                    pan: {
-                        enabled: true,
-                        mode: 'x',
-                    },
-                    zoom: {
-                        wheel: {
-                            enabled: true,
-                        },
-                        pinch: {
-                            enabled: true
-                        },
-                        mode: 'x',
-                    }
+    const options = {
+        ...chartTheme,
+        series: [{ name: 'Score Moyen par Jour', data: data }],
+        chart: {
+            ...chartTheme.chart,
+            type: 'line',
+            height: '100%',
+            zoom: { enabled: true },
+            toolbar: {
+                tools: {
+                    download: false, // On peut cacher les outils non désirés
+                    selection: true,
+                    zoom: true,
+                    zoomin: true,
+                    zoomout: true,
+                    pan: true,
+                    reset: true
                 }
             }
-        }
-    });
+        },
+        colors: ['#ef4444'], // red-500
+        stroke: { curve: 'smooth', width: 2 },
+        xaxis: {
+            ...chartTheme.xaxis,
+            type: 'datetime',
+            labels: { ...chartTheme.xaxis.labels, datetimeUTC: false } // Pour utiliser le fuseau horaire local
+        },
+        yaxis: { ...chartTheme.yaxis, min: 0, max: 25000 },
+        legend: { show: false }
+    };
+
+    const chart = new ApexCharts(chartEl, options);
+    chart.render();
 }

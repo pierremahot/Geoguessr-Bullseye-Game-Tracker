@@ -127,7 +127,7 @@ function initializeNewGame(url) {
 
         const gameId = lobby.gameLobbyId || `game_${new Date().getTime()}`;
         const players = lobby.players?.map(p => p.nick.trim()) || [];
-        const mapName = lobby.gameOptions?.mapSlug || 'Inconnue';
+        const mapName = lobby.mapName || 'Inconnue';
 
         currentGameData = {
             id: gameId,
