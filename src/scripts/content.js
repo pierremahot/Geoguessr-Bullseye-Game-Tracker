@@ -106,28 +106,48 @@ function startObserver() {
 }
 
 // Fonction pour initialiser les données d'une nouvelle partie
-function initializeNewGame(url) {
-    console.log('Bullseye Tracker: Initialisation d\'une nouvelle partie...');
+async function initializeNewGame(url) {
+    console.log('Bullseye Tracker: Détection d\'une nouvelle partie. En attente des données...');
     hasGameBeenSaved = false;
     currentGameData = null; // Réinitialiser
 
+    // Attendre que la page soit prête en observant l'apparition d'un élément clé
+    const waitForGameData = new Promise((resolve, reject) => {
+        const observer = new MutationObserver((mutations, obs) => {
+            const mapNameEl = document.querySelector('[data-qa="map-name"]');
+            if (mapNameEl) {
+                console.log('Bullseye Tracker: Données de la partie détectées dans le DOM.');
+                obs.disconnect(); // Arrêter d'observer
+                try {
+                    const nextDataEl = document.getElementById('__NEXT_DATA__');
+                    if (!nextDataEl || !nextDataEl.textContent) {
+                        return reject(new Error('__NEXT_DATA__ introuvable.'));
+                    }
+                    const data = JSON.parse(nextDataEl.textContent);
+                    const lobby = data?.props?.pageProps?.lobbyToJoin;
+
+                    if (!lobby) {
+                        return reject(new Error('Données du lobby introuvables.'));
+                    }
+                    resolve(lobby);
+                } catch (error) {
+                    reject(error);
+                }
+            }
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+        // Sécurité : si rien n'est trouvé après 10 secondes, on abandonne.
+        setTimeout(() => {
+            observer.disconnect();
+            reject(new Error('Timeout: les données de la partie n\'ont pas été trouvées à temps.'));
+        }, 10000);
+    });
+
     try {
-        const nextDataEl = document.getElementById('__NEXT_DATA__');
-        if (!nextDataEl || !nextDataEl.textContent) {
-            console.warn('Bullseye Tracker: __NEXT_DATA__ introuvable pour l\'initialisation.');
-            return;
-        }
-        const data = JSON.parse(nextDataEl.textContent);
-        const lobby = data?.props?.pageProps?.lobbyToJoin;
-
-        if (!lobby) {
-            console.warn('Bullseye Tracker: Données du lobby introuvables.');
-            return;
-        }
-
-        const gameId = lobby.gameLobbyId || `game_${new Date().getTime()}`;
-        const players = lobby.players?.map(p => p.nick.trim()) || [];
-        const mapName = lobby.mapName || 'Inconnue';
+        const lobbyData = await waitForGameData;
+        const gameId = lobbyData.gameLobbyId || `game_${new Date().getTime()}`;
+        const players = lobbyData.players?.map(p => p.nick.trim()) || [];
+        const mapName = lobbyData.mapName || 'Inconnue';
 
         currentGameData = {
             id: gameId,
@@ -144,7 +164,6 @@ function initializeNewGame(url) {
 
 // 3. Fonction pour surveiller les changements d'URL
 function startUrlObserver() {
-    // Pour les Single Page Applications, nous devons surveiller les changements d'URL manuels.
     let lastUrl = location.href; 
     new MutationObserver(() => {
       const url = location.href;
@@ -154,6 +173,9 @@ function startUrlObserver() {
       }
     }).observe(document, {subtree: true, childList: true});
  
+    // Vérifier l'URL actuelle au moment du chargement du script
+    onUrlChange(location.href);
+
     function onUrlChange(newUrl) {
         console.log('Bullseye Tracker: Changement d\'URL détecté ->', newUrl);
         
