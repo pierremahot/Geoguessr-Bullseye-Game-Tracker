@@ -25,9 +25,9 @@ document.addEventListener('DOMContentLoaded', async () => { // <-- Passage en as
 
     // Charger toutes les données de jeu
     const allGames = await getAllGames();
-    
+
     // Filtrer les parties pour n'inclure que celles de ce joueur
-    const playerGames = allGames.filter(game => 
+    const playerGames = allGames.filter(game =>
         Array.isArray(game.players) && game.players.includes(playerName)
     );
 
@@ -92,11 +92,23 @@ function renderScoreByMapBar(games) {
     games.forEach(game => {
         // Utiliser 'Inconnue' si le nom de la carte n'est pas défini (pour les anciennes parties)
         const mapName = game.mapName || 'Inconnue';
-        if (!scoresByMap[mapName]) {
-            scoresByMap[mapName] = { total: 0, count: 0 };
+        const roundTime = game.roundTime !== undefined ? game.roundTime : 0;
+
+        let displayMapName = mapName;
+        if (roundTime === 0) {
+            displayMapName += ' (Infinite)';
+        } else {
+            const minutes = Math.floor(roundTime / 60);
+            const seconds = roundTime % 60;
+            const timeStr = seconds > 0 ? `${minutes}m${seconds}s` : `${minutes}m`;
+            displayMapName += ` (${timeStr})`;
         }
-        scoresByMap[mapName].total += game.score;
-        scoresByMap[mapName].count++;
+
+        if (!scoresByMap[displayMapName]) {
+            scoresByMap[displayMapName] = { total: 0, count: 0 };
+        }
+        scoresByMap[displayMapName].total += game.score;
+        scoresByMap[displayMapName].count++;
     });
 
     const labels = Object.keys(scoresByMap);
@@ -129,7 +141,7 @@ function renderScoreByMapBar(games) {
  */
 function renderScoreByPlayersBar(games) {
     const chartEl = document.getElementById('scoreByPlayersChart');
-    
+
     const scoresByPlayerCount = {}; // ex: { 2: { total: 5000, count: 1 }, 3: { ... } }
 
     games.forEach(game => {
@@ -212,7 +224,7 @@ function renderBestTeam(games, currentPlayerName) {
     document.getElementById('bestTeamNames').textContent = `${currentPlayerName} + ${bestTeammate}`;
     document.getElementById('bestTeamScore').textContent = `${Math.round(bestAvg)} pts`;
     document.getElementById('bestTeamGameCount').textContent = `sur ${gameCount} partie(s)`;
-    
+
     document.getElementById('bestTeamLoading').style.display = 'none';
     document.getElementById('bestTeamContent').style.display = 'block';
 }

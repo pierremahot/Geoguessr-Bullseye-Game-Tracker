@@ -69,10 +69,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const gamesByMap = {};
         games.forEach(game => {
             const mapName = game.mapName || 'Inconnue';
-            if (!gamesByMap[mapName]) {
-                gamesByMap[mapName] = [];
+            const roundTime = game.roundTime !== undefined ? game.roundTime : 0;
+            const key = JSON.stringify({ name: mapName, time: roundTime });
+
+            if (!gamesByMap[key]) {
+                gamesByMap[key] = [];
             }
-            gamesByMap[mapName].push(game);
+            gamesByMap[key].push(game);
         });
 
         if (Object.keys(gamesByMap).length === 0) return;
@@ -89,9 +92,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Trier les cartes par nombre de parties jouées
         const sortedMaps = Object.keys(gamesByMap).sort((a, b) => gamesByMap[b].length - gamesByMap[a].length);
 
-        for (const mapName of sortedMaps) {
-            const gamesOnMap = gamesByMap[mapName];
-            
+        for (const key of sortedMaps) {
+            const gamesOnMap = gamesByMap[key];
+            const { name: mapName, time: roundTime } = JSON.parse(key);
+
+            // Format display name
+            let displayMapName = mapName;
+            if (roundTime === 0) {
+                displayMapName += ' (Infinite)';
+            } else {
+                const minutes = Math.floor(roundTime / 60);
+                const seconds = roundTime % 60;
+                const timeStr = seconds > 0 ? `${minutes}m${seconds}s` : `${minutes}m`;
+                displayMapName += ` (${timeStr})`;
+            }
+
             // Stats joueurs pour cette carte
             const playerStatsOnMap = {};
             gamesOnMap.forEach(game => {
@@ -116,7 +131,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const sortedTeamsOnMap = Object.entries(teamStatsOnMap).map(([name, stats]) => ({ name, ...stats, avgScore: stats.totalScore / stats.gameCount })).sort((a, b) => b.gameCount - a.gameCount);
 
             // Créer et ajouter la carte de classement pour cette map
-            const mapCard = createMapLeaderboardCard(mapName, gamesOnMap.length, sortedPlayersOnMap.slice(0, 5), sortedTeamsOnMap.slice(0, 5));
+            const mapCard = createMapLeaderboardCard(displayMapName, gamesOnMap.length, sortedPlayersOnMap.slice(0, 5), sortedTeamsOnMap.slice(0, 5));
             grid.appendChild(mapCard);
         }
     }
@@ -131,9 +146,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         items.forEach(item => {
             const li = document.createElement('li');
-            
+
             // Rendre les noms de joueurs cliquables
-            const playerLinks = item.name.split(', ').map(p => 
+            const playerLinks = item.name.split(', ').map(p =>
                 `<a href="${statsPageUrl}?player=${encodeURIComponent(p)}" target="_blank">${p}</a>`
             ).join(', ');
 
@@ -154,7 +169,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const renderItems = (items) => {
             if (items.length === 0) return '<li>Aucune donnée</li>';
             return items.map(item => {
-                const playerLinks = item.name.split(', ').map(p => 
+                const playerLinks = item.name.split(', ').map(p =>
                     `<a href="${statsPageUrl}?player=${encodeURIComponent(p)}" target="_blank">${p}</a>`
                 ).join(', ');
                 return `

@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Full Game History</title>
     <link rel="stylesheet" href="history.css">
 </head>
+
 <body>
     <div class="container">
         <div class="header">
@@ -32,6 +34,8 @@
                         </th>
                         <!-- NOUVEAU : Colonne pour la carte -->
                         <th class="sortable" data-sort-key="map">Map <span class="sort-arrow">▼</span></th>
+                        <th>Limit</th>
+                        <th>Duration</th>
                         <th class="sortable" data-sort-key="score">
                             Score <span class="sort-arrow">▼</span>
                         </th>
@@ -65,9 +69,10 @@
             </table>
         </div>
     </div>
-    
+
     <!-- Link to the JS file -->
     <!-- Ce fichier est généré par la commande 'bun run build' -->
     <script src="history.js"></script>
 </body>
+
 </html>

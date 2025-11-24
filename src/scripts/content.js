@@ -3,7 +3,7 @@ let hasGameBeenSaved = false;
 // Un objet pour stocker les données de la partie en cours.
 let currentGameData = null;
 // Une variable pour mettre en cache le nom de la carte sélectionnée dans le lobby.
-let cachedMapName = 'Inconnue';
+
 
 // 1. Fonction pour récupérer les données et les sauvegarder
 function saveGame(isGaveUp = false) {
@@ -49,6 +49,9 @@ function saveGame(isGaveUp = false) {
                 console.log(`Bullseye Tracker: Partie ${status} sauvegardée !`);
                 hasGameBeenSaved = true; // Marquer comme sauvegardé
                 currentGameData = null; // Nettoyer les données de la partie en cours
+
+                // Clear live game state
+                chrome.storage.local.remove('currentLiveGame');
             });
         });
 
@@ -88,70 +91,13 @@ function startObserver() {
                         }, { once: true });
                     }
 
-                    // --- DÉTECTION DU NOM DE LA CARTE DANS LE LOBBY ---
-                    // On cherche le conteneur parent qui contient le bouton de sélection de carte
-                    const mapSelectionContainer = document.querySelector('[data-qa="party-select-map-button"]')?.parentElement;
-                    let mapTitleEl = null;
-                    if (mapSelectionContainer) {
-                        mapTitleEl = mapSelectionContainer.querySelector('h3.footer-controls_buttonTitle__i1udH');
-                    }
-                    if (mapTitleEl && mapTitleEl.textContent) {
-                        const newMapName = mapTitleEl.textContent.trim();
-                        if (newMapName !== cachedMapName) {
-                            cachedMapName = newMapName;
-                            console.log(`Bullseye Tracker: Nom de carte mis en cache -> ${cachedMapName}`);
-                        }
-                    }
 
-                    // --- DÉTECTION DU SCORE DE FIN DE TOUR ---
-                    if (currentGameData) {
-                        const roundScoreSelector = 'h2.round-score_points__BQdOM';
-                        const roundScoreEl = node.querySelector(roundScoreSelector) || (node.matches(roundScoreSelector) ? node : null);
-                        if (roundScoreEl) {
-                            const roundScore = parseInt(roundScoreEl.textContent.replace(/[^0-9]/g, ''), 10);
-                            currentGameData.score = roundScore; // Le score du tour devient le score total
-                            console.log(`Bullseye Tracker: Score mis à jour (via score du tour) -> ${roundScore}`);
-                        }
-                    }
 
-                    // --- DÉTECTION DU SCORE (VIA AJOUT D'ÉLÉMENT) ---
-                    if (currentGameData) {
-                        const scoreContainer = node.querySelector('[data-qa="score"]') || (node.matches('[data-qa="score"]') ? node : null);
-                        if (scoreContainer) {
-                            const scoreValueEl = scoreContainer.querySelector('.status_value__oUOZ0');
-                            if (scoreValueEl) {
-                                const newScore = parseInt(scoreValueEl.textContent.replace(/[^0-9]/g, ''), 10);
-                                if (!isNaN(newScore) && newScore !== currentGameData.score) {
-                                    currentGameData.score = newScore;
-                                    console.log(`Bullseye Tracker: Score mis à jour (via DOM) -> ${newScore}`);
-                                }
-                            }
-                        }
-                    }
+
                 });
-            } else if (mutation.type === 'characterData') { // Détection de changement de texte
-                // On vérifie si le changement a eu lieu dans notre élément de score
-                const scoreValueEl = mutation.target.parentElement;
-                if (scoreValueEl && scoreValueEl.matches('.status_value__oUOZ0') && scoreValueEl.closest('[data-qa="score"]')) {
-                    const newScore = parseInt(scoreValueEl.textContent.replace(/[^0-9]/g, ''), 10);
-                    // On vérifie que le score est un nombre et qu'il a changé
-                    if (!isNaN(newScore) && newScore !== currentGameData.score) {
-                        currentGameData.score = newScore;
-                        console.log(`Bullseye Tracker: Score mis à jour (via texte) -> ${newScore}`);
-                    }
-                }
 
-                // --- DÉTECTION CHANGEMENT NOM CARTE (TEXTE) ---
-                const mapTitleParent = mutation.target.parentElement;
-                // On s'assure que le titre modifié est bien celui associé au bouton de sélection de carte
-                const mapSelectionContainer = document.querySelector('[data-qa="party-select-map-button"]')?.parentElement;
-                if (mapTitleParent && mapTitleParent.matches('h3.footer-controls_buttonTitle__i1udH') && mapSelectionContainer?.contains(mapTitleParent)) {
-                    const newMapName = mapTitleParent.textContent.trim();
-                    if (newMapName !== cachedMapName) {
-                        cachedMapName = newMapName;
-                        console.log(`Bullseye Tracker: Nom de carte mis à jour en cache -> ${cachedMapName}`);
-                    }
-                }
+
+
             }
         }
     };
@@ -161,67 +107,16 @@ function startObserver() {
 }
 
 // Fonction pour initialiser les données d'une nouvelle partie
-async function initializeNewGame(url) {
-    console.log('Bullseye Tracker: Détection d\'une nouvelle partie. En attente des données...');
+function initializeNewGame(url) {
+    console.log('Bullseye Tracker: Détection d\'une nouvelle partie.');
     hasGameBeenSaved = false;
 
     // Si on a déjà des données (venant de l'interception dans le lobby), on les utilise !
     if (currentGameData && currentGameData.id) {
         console.log('Bullseye Tracker: Utilisation des données interceptées dans le lobby.', currentGameData);
         currentGameData.url = url; // Mettre à jour l'URL
-        return;
-    }
-
-    currentGameData = null; // Réinitialiser si pas de données préalables
-
-    // Attendre que la page soit prête en observant l'apparition d'un élément clé
-    const waitForGameData = new Promise((resolve, reject) => {
-        // Fonction pour tenter de récupérer les données du lobby
-        const tryToGetData = () => {
-            const scoreEl = document.querySelector('[data-qa="score"]');
-            if (!scoreEl) return false; // L'interface du jeu n'est pas encore là
-
-            const nextDataEl = document.getElementById('__NEXT_DATA__');
-            if (nextDataEl?.textContent) {
-                const data = JSON.parse(nextDataEl.textContent);
-                const lobby = data?.props?.pageProps?.lobbyToJoin || data?.props?.pageProps?.lobby;
-                if (lobby) {
-                    console.log('Bullseye Tracker: Données du lobby trouvées !');
-                    resolve(lobby);
-                    return true; // Succès
-                }
-            }
-            return false; // Données pas encore prêtes
-        };
-
-        const observer = new MutationObserver((mutations, obs) => {
-            if (tryToGetData()) {
-                obs.disconnect();
-            }
-        });
-        observer.observe(document.body, { childList: true, subtree: true });
-        // Sécurité : si rien n'est trouvé après 10 secondes, on abandonne.
-        setTimeout(() => {
-            observer.disconnect();
-            reject(new Error('Timeout: les données de la partie n\'ont pas été trouvées à temps.'));
-        }, 10000);
-    });
-
-    try {
-        const lobbyData = await waitForGameData;
-        const gameId = lobbyData.gameLobbyId || `game_${new Date().getTime()}`;
-        const players = lobbyData.players?.map(p => p.nick.trim()) || [];
-
-        currentGameData = {
-            id: gameId,
-            players: players, // Utilisation du nom de carte mis en cache depuis le lobby
-            mapName: cachedMapName,
-            score: 0, // Le score commence à 0
-            url: url
-        };
-        console.log('Bullseye Tracker: Données de la partie initialisées.', currentGameData);
-    } catch (error) {
-        console.error('Bullseye Tracker: Erreur lors de l\'initialisation de la partie.', error);
+    } else {
+        console.log('Bullseye Tracker: Aucune donnée de lobby interceptée pour le moment.');
     }
 }
 
@@ -250,17 +145,7 @@ function startUrlObserver() {
         // Cas 2: L'utilisateur est dans le lobby (après une partie ou au démarrage)
         else if (newUrl.includes('/party')) {
             console.log('Bullseye Tracker: Retour au lobby détecté. Prêt pour la prochaine partie.');
-            // Tenter de lire le nom de la carte immédiatement au cas où il serait déjà affiché
-            const mapSelectionContainer = document.querySelector('[data-qa="party-select-map-button"]')?.parentElement;
-            let mapTitleEl = null;
-            if (mapSelectionContainer) {
-                mapTitleEl = mapSelectionContainer.querySelector('h3.footer-controls_buttonTitle__i1udH');
-            }
-            if (mapTitleEl && mapTitleEl.textContent) {
-                const newMapName = mapTitleEl.textContent.trim();
-                cachedMapName = newMapName;
-                console.log(`Bullseye Tracker: Nom de carte initial mis en cache -> ${cachedMapName}`);
-            }
+
         }
         // Cas 3: L'utilisateur lance une nouvelle partie Bullseye
         else if (newUrl.includes('/bullseye/')) {
@@ -308,18 +193,12 @@ window.addEventListener('message', (event) => {
         const players = lobbyData.players?.map(p => p.nick.trim()) || [];
         const mapName = lobbyData.mapName;
 
-        // Mettre à jour le cache du nom de la carte si disponible
-        if (mapName) {
-            cachedMapName = mapName;
-            console.log(`Bullseye Tracker: Nom de carte mis en cache via interception -> ${cachedMapName}`);
-        }
-
         // Si currentGameData n'existe pas encore, on le crée
         if (!currentGameData) {
             currentGameData = {
                 id: gameId,
                 players: players,
-                mapName: cachedMapName || 'Inconnue',
+                mapName: mapName || 'Inconnue',
                 score: 0,
                 url: currentUrl
             };
@@ -328,9 +207,159 @@ window.addEventListener('message', (event) => {
             // Mise à jour des données existantes
             currentGameData.players = players;
             if (gameId) currentGameData.id = gameId;
-            if (cachedMapName) currentGameData.mapName = cachedMapName;
+            if (mapName) currentGameData.mapName = mapName;
+
+            // Capture options if available (e.g. roundTime, mapSlug)
+            if (lobbyData.gameOptions) {
+                if (lobbyData.gameOptions.roundTime !== undefined) currentGameData.roundTime = lobbyData.gameOptions.roundTime;
+                if (lobbyData.gameOptions.mapSlug) currentGameData.mapSlug = lobbyData.gameOptions.mapSlug;
+            }
 
             console.log('Bullseye Tracker: Données mises à jour via interception.', currentGameData);
         }
+        saveLiveState();
+    }
+
+    // Handle API Guess Response
+    if (event.data.type === 'BULLSEYE_GUESS') {
+        const gameData = event.data.payload;
+        console.log('Bullseye Tracker: Guess API data received', gameData);
+        updateScoreFromGameData(gameData);
+    }
+
+    // Handle WebSocket Guess Message
+    if (event.data.type === 'BULLSEYE_WS') {
+        const wsData = event.data.payload;
+        console.log('Bullseye Tracker: WS Guess data received', wsData);
+        // The WS payload has a 'bullseye' object which contains the game state similar to the API
+        if (wsData.bullseye) {
+            updateScoreFromGameData(wsData.bullseye);
+        }
     }
 });
+
+// Helper to ensure currentGameData exists using the rich data from API/WS
+function ensureGameData(data) {
+    // Try to find the state object
+    // WS: data is bullseye object -> data.state
+    // API: data might be the state itself or have a state property
+    const state = data.state || (data.gameId ? data : null);
+
+    // If we don't have data yet, try to initialize
+    if (!currentGameData) {
+        if (state && state.gameId) {
+            console.log('Bullseye Tracker: Initializing game data from event payload...');
+
+            const gameId = state.gameId;
+            const mapName = state.mapName || (state.options && state.options.mapSlug) || 'Inconnue';
+
+            // Extract players
+            let players = [];
+            if (state.players && Array.isArray(state.players)) {
+                players = state.players.map(p => p.nick || p.playerId || 'Unknown');
+            }
+
+            currentGameData = {
+                id: gameId,
+                players: players,
+                mapName: mapName,
+                score: 0,
+                url: location.href,
+                roundTime: state.options ? state.options.roundTime : 0,
+                mapSlug: state.options ? state.options.mapSlug : null
+            };
+            console.log('Bullseye Tracker: Data initialized from event:', currentGameData);
+            return true;
+        }
+        return false;
+    }
+
+    // If we DO have data, check if we can enrich it with missing info
+    if (currentGameData && state) {
+        let updated = false;
+
+        // Update roundTime if missing
+        if (state.options && state.options.roundTime !== undefined && currentGameData.roundTime === undefined) {
+            currentGameData.roundTime = state.options.roundTime;
+            updated = true;
+        }
+
+        // Update mapSlug if missing
+        if (state.options && state.options.mapSlug && !currentGameData.mapSlug) {
+            currentGameData.mapSlug = state.options.mapSlug;
+            updated = true;
+        }
+
+        // Update mapName if it was unknown
+        if (currentGameData.mapName === 'Inconnue' && state.mapName) {
+            currentGameData.mapName = state.mapName;
+            updated = true;
+        }
+
+        if (updated) {
+            console.log('Bullseye Tracker: Game data enriched from event:', currentGameData);
+            saveLiveState();
+        }
+    }
+
+    return true;
+}
+
+// Helper to calculate and update score from game data
+function updateScoreFromGameData(data) {
+    // Try to initialize if missing
+    ensureGameData(data);
+
+    if (!currentGameData) return;
+
+    // Handle both API (data.rounds) and WS (data.state.rounds) structures
+    const rounds = data.rounds || (data.state && data.state.rounds);
+
+    if (rounds && Array.isArray(rounds) && rounds.length > 0) {
+        let totalScore = 0;
+
+        // Calculate Score
+        rounds.forEach(round => {
+            if (round.score && typeof round.score.points === 'number') {
+                totalScore += round.score.points;
+            }
+        });
+
+        // Calculate Total Duration
+        // We use the start time of the first round as the game start.
+        // The total duration is simply Now - GameStart.
+        // This accounts for all rounds and intermissions.
+        let totalDurationMs = 0;
+
+        // Sort rounds by roundNumber to be sure we have the first one
+        const sortedRounds = [...rounds].sort((a, b) => a.roundNumber - b.roundNumber);
+        const firstRound = sortedRounds[0];
+
+        if (firstRound && firstRound.startTime) {
+            const startTime = new Date(firstRound.startTime).getTime();
+            const now = Date.now();
+            if (!isNaN(startTime) && now > startTime) {
+                totalDurationMs = now - startTime;
+            }
+        }
+
+        let hasChanged = false;
+        if (totalScore !== currentGameData.score) {
+            console.log(`Bullseye Tracker: Score updated via interception -> ${totalScore}`);
+            currentGameData.score = totalScore;
+            hasChanged = true;
+        }
+
+        // Always update duration
+        currentGameData.totalDuration = Math.floor(totalDurationMs / 1000); // Store in seconds
+
+        saveLiveState();
+    }
+}
+
+// Helper to save live state to storage
+function saveLiveState() {
+    if (currentGameData && !hasGameBeenSaved) {
+        chrome.storage.local.set({ currentLiveGame: currentGameData });
+    }
+}

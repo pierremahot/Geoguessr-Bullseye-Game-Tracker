@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Filtrer les jeux
         let filteredGames = allGames.filter(game => {
             // Filtre Joueur (vérifie si au moins un joueur correspond)
-            const playerMatch = game.players.some(p => 
+            const playerMatch = game.players.some(p =>
                 p.toLowerCase().includes(playersValue)
             );
             // Filtre Carte (gère les anciennes parties sans mapName)
@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 3. Afficher la table (maintenant avec les jeux filtrés/triés)
     function renderTable(games) {
         if (!games || games.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No matching games found.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="9" style="text-align: center;">No matching games found.</td></tr>';
             return;
         }
 
@@ -103,9 +103,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         games.forEach(game => {
             const row = document.createElement('tr');
-            
-            const gameLink = game.url 
-                ? `<a href="${game.url}" target="_blank">Voir le récap.</a>` 
+
+            const gameLink = game.url
+                ? `<a href="${game.url}" target="_blank">Voir le récap.</a>`
                 : '<span>N/A</span>';
 
             let playersHtml = 'No players found';
@@ -120,16 +120,34 @@ document.addEventListener('DOMContentLoaded', async () => {
                 playersHtml = `<span class="player-tag">${game.players}</span>`;
             }
 
+            // Format Limit
+            let limitStr = 'Infinite';
+            if (game.roundTime && game.roundTime > 0) {
+                const min = Math.floor(game.roundTime / 60);
+                const sec = game.roundTime % 60;
+                limitStr = sec > 0 ? `${min}m${sec}s` : `${min}m`;
+            }
+
+            // Format Duration
+            let durationStr = '-';
+            if (game.totalDuration) {
+                const dMin = Math.floor(game.totalDuration / 60);
+                const dSec = game.totalDuration % 60;
+                durationStr = `${dMin}m ${dSec}s`;
+            }
+
             row.innerHTML = `
                 <td class="font-medium">${new Date(game.date).toLocaleString()}</td>
                 <td><div class="player-list">${playersHtml}</div></td>
                 <td>${game.mapName || 'Inconnue'}</td>
+                <td>${limitStr}</td>
+                <td>${durationStr}</td>
                 <td>${game.score}</td>
                 <td>
-                    ${game.gaveUp 
-                        ? '<span class="status-badge status-gaveup">Gave Up</span>' 
-                        : '<span class="status-badge status-finished">Finished</span>'
-                    }
+                    ${game.gaveUp
+                    ? '<span class="status-badge status-gaveup">Gave Up</span>'
+                    : '<span class="status-badge status-finished">Finished</span>'
+                }
                 </td>
                 <td>${gameLink}</td>
                 <td class="text-right">
