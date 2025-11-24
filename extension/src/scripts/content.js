@@ -52,6 +52,26 @@ function saveGame(isGaveUp = false) {
 
                 // Clear live game state
                 chrome.storage.local.remove('currentLiveGame');
+
+                // --- SYNC WITH API ---
+                chrome.storage.local.get(['apiUrl', 'apiToken'], (config) => {
+                    if (config.apiUrl) {
+                        console.log(`Bullseye Tracker: Syncing game to ${config.apiUrl}...`);
+                        fetch(config.apiUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                ...(config.apiToken ? { 'Authorization': `Bearer ${config.apiToken}` } : {})
+                            },
+                            body: JSON.stringify(newGame)
+                        })
+                            .then(res => {
+                                if (res.ok) console.log('Bullseye Tracker: Game synced successfully!');
+                                else console.error('Bullseye Tracker: Sync failed', res.status);
+                            })
+                            .catch(err => console.error('Bullseye Tracker: Sync error', err));
+                    }
+                });
             });
         });
 
