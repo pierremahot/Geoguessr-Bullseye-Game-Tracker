@@ -26,10 +26,21 @@
       ],
       "js": [
         "scripts/content.js"
-      ]
+      ],
+      "run_at": "document_start"
     }
   ],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'"
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "scripts/inject.js"
+      ],
+      "matches": [
+        "https://www.geoguessr.com/*"
+      ]
+    }
+  ]
 }

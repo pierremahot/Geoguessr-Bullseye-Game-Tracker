@@ -164,7 +164,15 @@ function startObserver() {
 async function initializeNewGame(url) {
     console.log('Bullseye Tracker: Détection d\'une nouvelle partie. En attente des données...');
     hasGameBeenSaved = false;
-    currentGameData = null; // Réinitialiser
+
+    // Si on a déjà des données (venant de l'interception dans le lobby), on les utilise !
+    if (currentGameData && currentGameData.id) {
+        console.log('Bullseye Tracker: Utilisation des données interceptées dans le lobby.', currentGameData);
+        currentGameData.url = url; // Mettre à jour l'URL
+        return;
+    }
+
+    currentGameData = null; // Réinitialiser si pas de données préalables
 
     // Attendre que la page soit prête en observant l'apparition d'un élément clé
     const waitForGameData = new Promise((resolve, reject) => {
@@ -219,21 +227,21 @@ async function initializeNewGame(url) {
 
 // 3. Fonction pour surveiller les changements d'URL
 function startUrlObserver() {
-    let lastUrl = location.href; 
+    let lastUrl = location.href;
     new MutationObserver(() => {
-      const url = location.href;
-      if (url !== lastUrl) {
-        lastUrl = url;
-        onUrlChange(url);
-      }
-    }).observe(document, {subtree: true, childList: true});
- 
+        const url = location.href;
+        if (url !== lastUrl) {
+            lastUrl = url;
+            onUrlChange(url);
+        }
+    }).observe(document, { subtree: true, childList: true });
+
     // Vérifier l'URL actuelle au moment du chargement du script
     onUrlChange(location.href);
 
     function onUrlChange(newUrl) {
         console.log('Bullseye Tracker: Changement d\'URL détecté ->', newUrl);
-        
+
         // Cas 1: L'utilisateur abandonne et retourne au lobby
         if (newUrl.includes('/party') && currentGameData && !hasGameBeenSaved) {
             console.log('Bullseye Tracker: Retour au lobby détecté (abandon).');
@@ -262,5 +270,67 @@ function startUrlObserver() {
 }
 
 // Démarrer l'observateur
-startObserver();
-startUrlObserver(); // Démarrer la surveillance de l'URL
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        startObserver();
+        startUrlObserver();
+    });
+} else {
+    startObserver();
+    startUrlObserver();
+}
+
+// Injecter le script d'interception
+const script = document.createElement('script');
+script.src = chrome.runtime.getURL('scripts/inject.js');
+script.onload = function () {
+    this.remove();
+};
+(document.head || document.documentElement).appendChild(script);
+
+// Écouter les messages du script injecté
+window.addEventListener('message', (event) => {
+    // On vérifie que le message vient bien de la même fenêtre
+    if (event.source !== window) return;
+
+    if (event.data.type && event.data.type === 'BULLSEYE_LOBBY_DATA') {
+        console.log('Bullseye Tracker: Données du lobby interceptées !', event.data.payload);
+        const lobbyData = event.data.payload;
+
+        // Si on a intercepté les données, on peut initialiser/mettre à jour currentGameData
+        // Note: On utilise l'URL actuelle car l'interception se fait sur la page du lobby
+        const currentUrl = location.href;
+
+        // On s'assure qu'on est bien dans un contexte où on veut tracker (optionnel, mais plus sûr)
+        // Mais comme l'API est spécifique, c'est probablement bon.
+
+        const gameId = lobbyData.gameLobbyId;
+        const players = lobbyData.players?.map(p => p.nick.trim()) || [];
+        const mapName = lobbyData.mapName;
+
+        // Mettre à jour le cache du nom de la carte si disponible
+        if (mapName) {
+            cachedMapName = mapName;
+            console.log(`Bullseye Tracker: Nom de carte mis en cache via interception -> ${cachedMapName}`);
+        }
+
+        // Si currentGameData n'existe pas encore, on le crée
+        if (!currentGameData) {
+            currentGameData = {
+                id: gameId,
+                players: players,
+                mapName: cachedMapName || 'Inconnue',
+                score: 0,
+                url: currentUrl
+            };
+            console.log('Bullseye Tracker: Données initialisées via interception.', currentGameData);
+        } else {
+            // Mise à jour des données existantes
+            currentGameData.players = players;
+            if (gameId) currentGameData.id = gameId;
+            if (cachedMapName) currentGameData.mapName = cachedMapName;
+
+            console.log('Bullseye Tracker: Données mises à jour via interception.', currentGameData);
+        }
+    }
+});
