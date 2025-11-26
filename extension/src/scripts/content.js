@@ -2,6 +2,14 @@
 let hasGameBeenSaved = false;
 // Un objet pour stocker les données de la partie en cours.
 let currentGameData = null;
+// Variable to store the latest raw WebSocket payload
+let latestPayload = null;
+// Variable to store the latest raw Lobby payload
+let latestLobbyPayload = null;
+
+// ... (rest of the file)
+
+
 // Une variable pour mettre en cache le nom de la carte sélectionnée dans le lobby.
 
 
@@ -55,15 +63,38 @@ function saveGame(isGaveUp = false) {
 
                 // --- SYNC WITH API ---
                 chrome.storage.local.get(['apiUrl', 'apiToken'], (config) => {
+                    console.log('Bullseye Tracker: Retrieved config:', config);
                     if (config.apiUrl) {
                         console.log(`Bullseye Tracker: Syncing game to ${config.apiUrl}...`);
+
+                        // Construct the payload to send
+                        // 1. Start with the raw WS payload if available, or a basic object
+                        let payloadToSend = latestPayload ? { ...latestPayload } : {};
+
+                        // 2. If we don't have a WS payload, try to construct a minimal compatible one from newGame
+                        if (!latestPayload) {
+                            payloadToSend.gameId = newGame.id;
+                            // We could try to reconstruct more, but the backend mainly needs gameId and raw data
+                            // If we have nothing else, we might send newGame as a fallback field?
+                            // But backend expects BullseyePayload structure.
+                            // Let's at least ensure gameId is there.
+                        }
+
+                        // 3. Inject the Lobby payload if available
+                        if (latestLobbyPayload) {
+                            console.log('Bullseye Tracker: Injecting lobby payload into request.');
+                            payloadToSend.lobby = latestLobbyPayload;
+                        }
+
+                        console.log('Bullseye Tracker: Sending payload (JSON):', JSON.stringify(payloadToSend, null, 2));
+
                         fetch(config.apiUrl, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
                                 ...(config.apiToken ? { 'Authorization': `Bearer ${config.apiToken}` } : {})
                             },
-                            body: JSON.stringify(newGame)
+                            body: JSON.stringify(payloadToSend)
                         })
                             .then(res => {
                                 if (res.ok) console.log('Bullseye Tracker: Game synced successfully!');
@@ -201,6 +232,7 @@ window.addEventListener('message', (event) => {
     if (event.data.type && event.data.type === 'BULLSEYE_LOBBY_DATA') {
         console.log('Bullseye Tracker: Données du lobby interceptées !', event.data.payload);
         const lobbyData = event.data.payload;
+        latestLobbyPayload = lobbyData; // Store raw lobby data
 
         // Si on a intercepté les données, on peut initialiser/mettre à jour currentGameData
         // Note: On utilise l'URL actuelle car l'interception se fait sur la page du lobby
@@ -251,6 +283,7 @@ window.addEventListener('message', (event) => {
     if (event.data.type === 'BULLSEYE_WS') {
         const wsData = event.data.payload;
         console.log('Bullseye Tracker: WS Guess data received', wsData);
+        latestPayload = wsData; // Store the raw payload
         // The WS payload has a 'bullseye' object which contains the game state similar to the API
         if (wsData.bullseye) {
             updateScoreFromGameData(wsData.bullseye);

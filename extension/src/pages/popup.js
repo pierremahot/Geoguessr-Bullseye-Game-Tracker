@@ -4,6 +4,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     const quickHistory = document.getElementById('quickHistory');
     const viewAllHistoryBtn = document.getElementById('viewAllHistory');
     const viewLeaderboardBtn = document.getElementById('viewLeaderboard');
+    const openOptionsBtn = document.getElementById('openOptions');
+
+    // Gérer le clic sur le bouton des options
+    if (openOptionsBtn) {
+        openOptionsBtn.addEventListener('click', () => {
+            if (chrome.runtime.openOptionsPage) {
+                chrome.runtime.openOptionsPage();
+            } else {
+                window.open(chrome.runtime.getURL('pages/options.html'));
+            }
+        });
+    }
 
     // Fonction pour charger et afficher les 3 derniers matchs
     async function loadQuickHistory() {

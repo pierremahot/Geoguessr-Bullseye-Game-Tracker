@@ -1,0 +1,63 @@
+{
+    "code": "BullseyeGuess",
+    "gameId": "e622ab7b-4c4c-4294-a1ac-4ccafa8a8de8",
+    "playerId": null,
+    "payload": null,
+    "timestamp": "2025-11-26T21:37:36.2692579Z",
+    "lobby": null,
+    "countryGuess": null,
+    "coordinateGuess": null,
+    "battleRoyaleGameState": null,
+    "battleRoyalePlayer": null,
+    "duel": null,
+    "bullseye": {
+        "state": {
+            "gameId": "e622ab7b-4c4c-4294-a1ac-4ccafa8a8de8",
+            "status": "Finished",
+            "options": {
+                "movementOptions": {
+                    "forbidMoving": false,
+                    "forbidZooming": false,
+                    "forbidRotating": false
+                },
+                "roundCount": 5,
+                "mapSlug": "world",
+                "roundTime": 100,
+                "guessMapType": "roadmap"
+            },
+            "version": 41,
+            "currentRoundNumber": 5,
+            "rounds": [],
+            "players": [],
+            "boundingBox": {
+                "min": {
+                    "lat": -54.853378,
+                    "lng": -159.778792
+                },
+                "max": {
+                    "lat": 78.655743,
+                    "lng": 178.4508514404297
+                }
+            },
+            "hostPlayerId": "5d5afe4db4ec171bd432ac55",
+            "mapName": "World"
+        },
+        "guess": {
+            "roundNumber": 5,
+            "lat": 15.8942113960945,
+            "lng": -73.98427627389195,
+            "size": 5,
+            "isDraft": false,
+            "score": {
+                "isAnswerWithinRadius": false,
+                "points": 0,
+                "maxPoints": 5000,
+                "distance": 0
+            }
+        },
+        "location": null,
+        "recipientPlayerId": null,
+        "playerId": "692772a1a151998a48c1376c"
+    },
+    "liveChallenge": null
+}

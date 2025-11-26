@@ -2,7 +2,8 @@
 body {
     width: 350px;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
-    background-color: #f4f4f5; /* gray-100 */
+    background-color: #f4f4f5;
+    /* gray-100 */
     color: #1a1a1a;
     margin: 0;
     padding: 16px;
@@ -18,9 +19,17 @@ body {
 .header {
     display: flex;
     align-items: center;
-    gap: 12px;
+    justify-content: space-between;
+    /* Push settings to right */
     padding-bottom: 10px;
-    border-bottom: 1px solid #e5e7eb; /* gray-200 */
+    border-bottom: 1px solid #e5e7eb;
+    /* gray-200 */
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 .logo {
@@ -29,10 +38,28 @@ body {
 }
 
 h1 {
-    font-size: 1.25rem; /* 20px */
+    font-size: 1.25rem;
+    /* 20px */
     font-weight: 700;
-    color: #111827; /* gray-900 */
+    color: #111827;
+    /* gray-900 */
     margin: 0;
+}
+
+.settings-btn {
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    line-height: 1;
+}
+
+.settings-btn:hover {
+    background-color: #e5e7eb;
+    /* gray-200 */
 }
 
 /* Main Content */
@@ -46,26 +73,30 @@ main {
     background-color: #ffffff;
     padding: 16px;
     border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 h2 {
-    font-size: 1rem; /* 16px */
+    font-size: 1rem;
+    /* 16px */
     font-weight: 600;
     margin-top: 0;
     margin-bottom: 12px;
-    color: #374151; /* gray-700 */
+    color: #374151;
+    /* gray-700 */
 }
 
 /* Map Placeholder */
 #map-placeholder {
     height: 150px;
-    background-color: #e5e7eb; /* gray-200 */
+    background-color: #e5e7eb;
+    /* gray-200 */
     border-radius: 6px;
     display: flex;
     justify-content: center;
     align-items: center;
-    color: #6b7280; /* gray-500 */
+    color: #6b7280;
+    /* gray-500 */
     font-size: 0.875rem;
 }
 
@@ -80,8 +111,10 @@ h2 {
 
 #quickHistory .history-item {
     padding-bottom: 8px;
-    border-bottom: 1px solid #e5e7eb; /* gray-200 */
+    border-bottom: 1px solid #e5e7eb;
+    /* gray-200 */
 }
+
 #quickHistory .history-item:last-child {
     border-bottom: none;
 }
@@ -93,16 +126,19 @@ h2 {
 
 #quickHistory .history-date {
     font-weight: 500;
-    color: #111827; /* gray-900 */
+    color: #111827;
+    /* gray-900 */
 }
 
 #quickHistory .history-details {
-    color: #4b5563; /* gray-600 */
+    color: #4b5563;
+    /* gray-600 */
     font-size: 0.8rem;
 }
 
 #quickHistory .no-games {
-    color: #6b7280; /* gray-500 */
+    color: #6b7280;
+    /* gray-500 */
     text-align: center;
     padding: 20px 0;
 }
@@ -116,8 +152,10 @@ h2 {
 }
 
 .player-tag {
-    background-color: #e5e7eb; /* gray-200 */
-    color: #374151; /* gray-700 */
+    background-color: #e5e7eb;
+    /* gray-200 */
+    color: #374151;
+    /* gray-700 */
     padding: 2px 8px;
     border-radius: 9999px;
     font-size: 0.75rem;
@@ -126,15 +164,18 @@ h2 {
 }
 
 .player-tag.clickable {
-    color: #dc2626; /* red-600 */
-    background-color: #fee2e2; /* red-100 */
+    color: #dc2626;
+    /* red-600 */
+    background-color: #fee2e2;
+    /* red-100 */
     cursor: pointer;
     text-decoration: none;
     transition: background-color 0.2s, color 0.2s;
 }
 
 .player-tag.clickable:hover {
-    background-color: #dc2626; /* red-600 */
+    background-color: #dc2626;
+    /* red-600 */
     color: #ffffff;
 }
 
@@ -142,11 +183,13 @@ h2 {
 .footer-nav {
     display: flex;
     gap: 12px;
-    margin-top: auto; /* Pushes footer to the bottom */
+    margin-top: auto;
+    /* Pushes footer to the bottom */
 }
 
 .btn {
-    flex: 1; /* Make buttons share space equally */
+    flex: 1;
+    /* Make buttons share space equally */
     display: inline-block;
     justify-content: center;
     border-radius: 6px;
@@ -155,7 +198,7 @@ h2 {
     font-weight: 500;
     text-align: center;
     border: 1px solid transparent;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     cursor: pointer;
     transition: background-color 0.2s, border-color 0.2s;
     text-decoration: none;
@@ -163,11 +206,14 @@ h2 {
 
 .btn-secondary {
     background-color: #ffffff;
-    color: #374151; /* gray-700 */
-    border-color: #d1d5db; /* gray-300 */
+    color: #374151;
+    /* gray-700 */
+    border-color: #d1d5db;
+    /* gray-300 */
 }
 
 .btn-secondary:hover {
-    background-color: #f9fafb; /* gray-50 */
+    background-color: #f9fafb;
+    /* gray-50 */
     border-color: #c7cbd1;
 }
