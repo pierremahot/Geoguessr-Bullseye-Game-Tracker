@@ -254,7 +254,7 @@ window.addEventListener('message', (event) => {
                 score: 0,
                 url: currentUrl
             };
-            console.log('Bullseye Tracker: Données initialisées via interception.', currentGameData);
+            console.log('Bullseye Tracker: Données initialisées via interception lobby.', currentGameData);
         } else {
             // Mise à jour des données existantes
             currentGameData.players = players;
@@ -267,7 +267,42 @@ window.addEventListener('message', (event) => {
                 if (lobbyData.gameOptions.mapSlug) currentGameData.mapSlug = lobbyData.gameOptions.mapSlug;
             }
 
-            console.log('Bullseye Tracker: Données mises à jour via interception.', currentGameData);
+            console.log('Bullseye Tracker: Données mises à jour via interception lobby.', currentGameData);
+        }
+        saveLiveState();
+    }
+
+    if (event.data.type && event.data.type === 'BULLSEYE_GAME_DATA') {
+        console.log('Bullseye Tracker: Données de jeu API interceptées !', event.data.payload);
+        const gameData = event.data.payload;
+        latestLobbyPayload = gameData; // Use this as the "lobby" payload as it contains similar info
+
+        const currentUrl = location.href;
+        const gameId = gameData.gameLobbyId || gameData.gameId; // Handle potential variations
+        const players = gameData.players?.map(p => p.nick.trim()) || [];
+        const mapName = gameData.mapName;
+
+        if (!currentGameData) {
+            currentGameData = {
+                id: gameId,
+                players: players,
+                mapName: mapName || 'Inconnue',
+                score: 0,
+                url: currentUrl
+            };
+            console.log('Bullseye Tracker: Données initialisées via interception API.', currentGameData);
+        } else {
+            // Mise à jour des données existantes
+            currentGameData.players = players;
+            if (gameId) currentGameData.id = gameId;
+            if (mapName) currentGameData.mapName = mapName;
+
+            // Capture options
+            if (gameData.gameOptions) {
+                if (gameData.gameOptions.roundTime !== undefined) currentGameData.roundTime = gameData.gameOptions.roundTime;
+                if (gameData.gameOptions.mapSlug) currentGameData.mapSlug = gameData.gameOptions.mapSlug;
+            }
+            console.log('Bullseye Tracker: Données mises à jour via interception API.', currentGameData);
         }
         saveLiveState();
     }
