@@ -6,6 +6,8 @@ let currentGameData = null;
 let latestPayload = null;
 // Variable to store the latest raw Lobby payload
 let latestLobbyPayload = null;
+// Variable to store the latest raw Game API payload
+let latestGameApiData = null;
 
 // ... (rest of the file)
 
@@ -80,10 +82,22 @@ function saveGame(isGaveUp = false) {
                             // Let's at least ensure gameId is there.
                         }
 
+                        // Inject totalDuration if available
+                        if (newGame.totalDuration !== undefined) {
+                            payloadToSend.totalDuration = newGame.totalDuration;
+                        }
+
                         // 3. Inject the Lobby payload if available
                         if (latestLobbyPayload) {
                             console.log('Bullseye Tracker: Injecting lobby payload into request.');
                             payloadToSend.lobby = latestLobbyPayload;
+                        }
+
+                        // 4. Inject the Game API payload if available (CRITICAL FIX)
+                        if (latestGameApiData) {
+                            console.log('Bullseye Tracker: Injecting game API payload into bullseye.state.');
+                            if (!payloadToSend.bullseye) payloadToSend.bullseye = {};
+                            payloadToSend.bullseye.state = latestGameApiData;
                         }
 
                         console.log('Bullseye Tracker: Sending payload (JSON):', JSON.stringify(payloadToSend, null, 2));
@@ -216,13 +230,8 @@ if (document.readyState === 'loading') {
     startUrlObserver();
 }
 
-// Injecter le script d'interception
-const script = document.createElement('script');
-script.src = chrome.runtime.getURL('scripts/inject.js');
-script.onload = function () {
-    this.remove();
-};
-(document.head || document.documentElement).appendChild(script);
+// Script d'interception injecté via manifest.json (world: "MAIN")
+
 
 // Écouter les messages du script injecté
 window.addEventListener('message', (event) => {
@@ -275,7 +284,7 @@ window.addEventListener('message', (event) => {
     if (event.data.type && event.data.type === 'BULLSEYE_GAME_DATA') {
         console.log('Bullseye Tracker: Données de jeu API interceptées !', event.data.payload);
         const gameData = event.data.payload;
-        latestLobbyPayload = gameData; // Use this as the "lobby" payload as it contains similar info
+        latestGameApiData = gameData; // Store as Game API data, NOT lobby data
 
         const currentUrl = location.href;
         const gameId = gameData.gameLobbyId || gameData.gameId; // Handle potential variations
