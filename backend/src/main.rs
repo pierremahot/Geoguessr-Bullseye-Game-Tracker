@@ -393,18 +393,24 @@ async fn submit_game(
 }
 
 #[derive(Serialize, ToSchema)]
+struct PlayerInfo {
+    id: String,
+    name: String,
+}
+
+#[derive(Serialize, ToSchema)]
 struct GameSummary {
-    id: i32,
+    id: i64,
     game_id: Option<String>,
     map_name: Option<String>,
-    score: Option<i32>,
-    round_time: Option<i32>,
-    total_duration: Option<i32>,
+    score: Option<i64>,
+    round_time: Option<i64>,
+    total_duration: Option<i64>,
     played_at: String,
-    players: Vec<String>,
+    players: Vec<PlayerInfo>,
     country_codes: Vec<String>,
-    round_count: i32,
-    max_score: i32,
+    round_count: i64,
+    max_score: i64,
     is_finished: bool,
 }
 
@@ -434,9 +440,9 @@ async fn get_games(State(pool): State<AnyPool>) -> Json<Vec<GameSummary>> {
     };
 
     let games = rows.into_iter().map(|row| {
-        let mut players = Vec::new();
+        let mut players: Vec<PlayerInfo> = Vec::new();
         let mut country_codes = Vec::new();
-        let mut round_count = 0;
+        let mut round_count: i64 = 0;
         let mut is_finished = false;
 
         let data_str: Option<String> = row.get("data");
@@ -446,15 +452,18 @@ async fn get_games(State(pool): State<AnyPool>) -> Json<Vec<GameSummary>> {
                     // Extract Players
                     if let Some(p_list) = &state.players {
                         players = p_list.iter().map(|p| {
-                            p.nick.clone()
-                                .or_else(|| p.player_id.clone())
-                                .unwrap_or_else(|| "Unknown".to_string())
+                            PlayerInfo {
+                                id: p.player_id.clone().unwrap_or_default(),
+                                name: p.nick.clone()
+                                    .or_else(|| p.player_id.clone())
+                                    .unwrap_or_else(|| "Unknown".to_string())
+                            }
                         }).collect();
                     }
                     
                     // Extract Country Codes (Flags)
                     if let Some(rounds) = &state.rounds {
-                        round_count = rounds.len() as i32;
+                        round_count = rounds.len() as i64;
                         for round in rounds {
                             if let Some(cc) = round.panorama.as_ref().and_then(|p| p.country_code.as_ref()) {
                                 country_codes.push(cc.clone());
@@ -470,17 +479,31 @@ async fn get_games(State(pool): State<AnyPool>) -> Json<Vec<GameSummary>> {
             }
         }
 
+        let id: i64 = match row.try_get("id") {
+            Ok(v) => v,
+            Err(e) => {
+                eprintln!("Error getting id: {}", e);
+                0
+            }
+        };
+        let game_id: Option<String> = row.try_get("game_id").unwrap_or_default();
+        let map_name: Option<String> = row.try_get("map_name").unwrap_or_default();
+        let score: Option<i64> = row.try_get("score").unwrap_or_default();
+        let round_time: Option<i64> = row.try_get("round_time").unwrap_or_default();
+        let total_duration: Option<i64> = row.try_get("total_duration").unwrap_or_default();
+        let played_at: String = row.try_get("played_at").unwrap_or_default();
+
         GameSummary {
-            id: row.get("id"),
-            game_id: row.get("game_id"),
-            map_name: row.get("map_name"),
-            score: row.get("score"),
-            round_time: row.get("round_time"),
-            total_duration: row.get("total_duration"),
-            played_at: row.try_get::<String, _>("played_at").unwrap_or_default(),
+            id,
+            game_id,
+            map_name,
+            score,
+            round_time,
+            round_count, // Calculated above
+            total_duration,
+            played_at,
             players,
             country_codes,
-            round_count,
             max_score: round_count * 5000,
             is_finished,
         }
@@ -575,7 +598,7 @@ async fn get_stats(State(pool): State<AnyPool>) -> Json<GameStats> {
 #[derive(Serialize, ToSchema)]
 struct TeamStats {
     team_name: String, // Comma separated player names
-    player_ids: Vec<String>,
+    members: Vec<PlayerInfo>,
     games_played: i32,
     average_score: f64,
     total_score: i32,
@@ -592,8 +615,8 @@ struct TeamStats {
 async fn get_team_leaderboard(State(pool): State<AnyPool>) -> Json<Vec<TeamStats>> {
     let rows = sqlx::query("SELECT data FROM games").fetch_all(&pool).await.unwrap_or_default();
 
-    // Map of Sorted Player IDs -> (Player Names, Player IDs, Total Score, Count, Total Duration)
-    let mut team_stats: std::collections::HashMap<String, (Vec<String>, Vec<String>, i32, i32, i64)> = std::collections::HashMap::new();
+    // Map of Sorted Player IDs -> (Members, Total Score, Count, Total Duration)
+    let mut team_stats: std::collections::HashMap<String, (Vec<PlayerInfo>, i32, i32, i64)> = std::collections::HashMap::new();
 
     for row in rows {
         let data_str: Option<String> = row.get("data");
@@ -603,19 +626,19 @@ async fn get_team_leaderboard(State(pool): State<AnyPool>) -> Json<Vec<TeamStats
                     if let Some(players) = &state.players {
                         if !players.is_empty() {
                             // Extract player info
-                            let mut current_team_players: Vec<(String, String)> = players.iter().map(|p| {
-                                (
-                                    p.player_id.clone().unwrap_or_default(),
-                                    p.nick.clone()
+                            let mut current_team_players: Vec<PlayerInfo> = players.iter().map(|p| {
+                                PlayerInfo {
+                                    id: p.player_id.clone().unwrap_or_default(),
+                                    name: p.nick.clone()
                                         .or_else(|| p.player_id.clone())
                                         .unwrap_or_else(|| "Unknown".to_string())
-                                )
+                                }
                             }).collect();
 
                             // Sort by Player ID to ensure consistent team key
-                            current_team_players.sort_by(|a, b| a.0.cmp(&b.0));
+                            current_team_players.sort_by(|a, b| a.id.cmp(&b.id));
 
-                            let team_key = current_team_players.iter().map(|p| p.0.clone()).collect::<Vec<_>>().join(",");
+                            let team_key = current_team_players.iter().map(|p| p.id.clone()).collect::<Vec<_>>().join(",");
                             
                             // Calculate Score for this game
                             let mut game_score = 0;
@@ -629,22 +652,16 @@ async fn get_team_leaderboard(State(pool): State<AnyPool>) -> Json<Vec<TeamStats
                             let duration = payload.total_duration.unwrap_or(0) as i64;
 
                             // Update stats
-                            let entry = team_stats.entry(team_key.clone()).or_insert((Vec::new(), Vec::new(), 0, 0, 0));
+                            let entry = team_stats.entry(team_key.clone()).or_insert((Vec::new(), 0, 0, 0));
                             
-                            // Update player Names/IDs if not set (first time)
+                            // Update members if not set (first time)
                             if entry.0.is_empty() {
-                                entry.0 = current_team_players.iter().map(|p| p.1.clone()).collect(); // Names
-                                entry.1 = current_team_players.iter().map(|p| p.0.clone()).collect(); // IDs
+                                entry.0 = current_team_players;
                             }
                             
-                            // Try to update names if we have "Unknown"
-                            // For now, let's just use IDs as names if we can't find better, 
-                            // OR we can try to extract names from the lobby data if present.
-                            // Let's improve name extraction later.
-                            
-                            entry.2 += game_score;
-                            entry.3 += 1;
-                            entry.4 += duration;
+                            entry.1 += game_score;
+                            entry.2 += 1;
+                            entry.3 += duration;
                         }
                     }
                 }
@@ -652,10 +669,11 @@ async fn get_team_leaderboard(State(pool): State<AnyPool>) -> Json<Vec<TeamStats
         }
     }
 
-    let mut leaderboard: Vec<TeamStats> = team_stats.into_iter().map(|(_key, (names, ids, total_score, count, total_duration))| {
+    let mut leaderboard: Vec<TeamStats> = team_stats.into_iter().map(|(_key, (members, total_score, count, total_duration))| {
+        let team_name = members.iter().map(|p| p.name.clone()).collect::<Vec<_>>().join(", ");
         TeamStats {
-            team_name: names.join(", "), // Placeholder: Use IDs as names for now
-            player_ids: ids,
+            team_name,
+            members,
             games_played: count,
             average_score: if count > 0 { total_score as f64 / count as f64 } else { 0.0 },
             total_score,

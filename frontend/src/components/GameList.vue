@@ -1,5 +1,6 @@
 <script setup>
-import { ref, onMounted, h, computed } from 'vue';
+import { ref, onMounted, h } from 'vue';
+import { RouterLink } from 'vue-router';
 import { fetchGames } from '../services/api';
 import DataTable from './DataTable.vue';
 import { History, Clock, Users, Map as MapIcon, Hash, Flag, Trophy } from 'lucide-vue-next';
@@ -52,11 +53,31 @@ const columns = [
     cell: info => {
       const codes = info.getValue() || [];
       if (codes.length === 0) return h('span', { class: 'text-gray-600 text-xs' }, '-');
-      return h('div', { class: 'flex -space-x-2 overflow-hidden py-1' }, 
-        codes.map(code => h('span', { 
-          class: `fi fi-${code.toLowerCase()} w-6 h-4 rounded shadow-sm ring-1 ring-gray-800`,
-          title: code
-        }))
+
+      // Group counts
+      const counts = codes.reduce((acc, code) => {
+        const lower = code.toLowerCase();
+        acc[lower] = (acc[lower] || 0) + 1;
+        return acc;
+      }, {});
+
+      return h('div', { class: 'flex flex-wrap gap-2' }, 
+        Object.entries(counts).map(([code, count]) => {
+          const flagEl = h('span', { 
+            class: `fi fi-${code} w-6 h-4 rounded shadow-sm ring-1 ring-gray-800`,
+            title: code.toUpperCase()
+          });
+          
+          if (count > 1) {
+            return h('div', { class: 'relative inline-flex' }, [
+              flagEl,
+              h('span', { 
+                class: 'absolute -top-2 -right-2 bg-gray-700 text-white text-[10px] font-bold px-1 rounded-full border border-gray-600 shadow-sm' 
+              }, count)
+            ]);
+          }
+          return flagEl;
+        })
       );
     },
     enableSorting: false,
@@ -67,11 +88,16 @@ const columns = [
     cell: info => {
       const players = info.getValue() || [];
       if (players.length === 0) return h('span', { class: 'text-gray-500 text-xs' }, 'Unknown');
-      return h('div', { class: 'flex flex-col' }, players.map(p => h('span', { class: 'text-white font-medium text-xs' }, p)));
+      return h('div', { class: 'flex flex-col gap-1' }, players.map(p => 
+        h(RouterLink, { 
+          to: `/player/${p.id}`, 
+          class: 'text-white font-medium text-xs hover:text-blue-400 transition-colors' 
+        }, () => p.name)
+      ));
     },
     filterFn: (row, columnId, filterValue) => {
       const players = row.getValue(columnId);
-      return players.some(p => p.toLowerCase().includes(filterValue.toLowerCase()));
+      return players.some(p => p.name.toLowerCase().includes(filterValue.toLowerCase()));
     }
   },
   {

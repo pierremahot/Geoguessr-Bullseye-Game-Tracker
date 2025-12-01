@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '../views/HomeView.vue';
 import LeaderboardView from '../views/LeaderboardView.vue';
+import PlayerStatsView from '../views/PlayerStatsView.vue';
+import TeamStatsView from '../views/TeamStatsView.vue';
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -14,6 +16,16 @@ const router = createRouter({
             path: '/leaderboard',
             name: 'leaderboard',
             component: LeaderboardView
+        },
+        {
+            path: '/player/:id',
+            name: 'player-stats',
+            component: PlayerStatsView
+        },
+        {
+            path: '/team/:id',
+            name: 'team-stats',
+            component: TeamStatsView
         }
     ]
 });

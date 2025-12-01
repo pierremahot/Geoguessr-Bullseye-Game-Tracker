@@ -60,13 +60,16 @@ function formatDuration(seconds) {
               </td>
               <td class="px-6 py-4">
                 <div class="flex items-center gap-3">
-                  <div class="p-2 bg-gray-700 rounded-full group-hover:bg-gray-600 transition-colors">
+                  <RouterLink :to="`/team/${team.members.map(m => m.id).join(',')}`" class="p-2 bg-gray-700 rounded-full hover:bg-gray-600 transition-colors cursor-pointer">
                     <Users class="w-5 h-5 text-blue-400" />
-                  </div>
+                  </RouterLink>
                   <div>
-                    <div class="font-medium text-white text-base">{{ team.team_name }}</div>
-                    <div class="text-xs text-gray-500 font-mono mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                      {{ team.player_ids.join(', ') }}
+                    <div class="flex flex-wrap gap-2">
+                      <RouterLink v-for="(member, i) in team.members" :key="i" 
+                            :to="`/player/${member.id}`"
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200 shadow-sm hover:bg-red-200 transition-colors">
+                        {{ member.name }}
+                      </RouterLink>
                     </div>
                   </div>
                 </div>
