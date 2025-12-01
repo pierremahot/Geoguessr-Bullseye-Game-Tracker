@@ -202,37 +202,39 @@ window.addEventListener('message', (event) => {
         const wsData = event.data.payload;
         console.log('Bullseye Tracker: WS data received', wsData);
 
-        if (wsData.code === 'BullseyeRoundStarted') {
-            // Update state with new round info
-            if (wsData.bullseye && wsData.bullseye.state) {
-                mergeGameState(wsData.bullseye.state);
-            }
-        } else if (wsData.code === 'BullseyeGuess') {
-            // Update state with guess info
-            if (wsData.bullseye && wsData.bullseye.state) {
-                mergeGameState(wsData.bullseye.state);
-            }
-        } else if (wsData.code === 'BullseyeRoundEnded') {
-            // Update state
-            if (wsData.bullseye && wsData.bullseye.state) {
-                mergeGameState(wsData.bullseye.state);
-
-                // Check if game is finished
-                if (wsData.bullseye.state.status === 'Finished') {
-                    console.log('Bullseye Tracker: Game Finished via WS!');
-                    saveGame(false);
+        (async () => {
+            if (wsData.code === 'BullseyeRoundStarted') {
+                // Update state with new round info
+                if (wsData.bullseye && wsData.bullseye.state) {
+                    await mergeGameState(wsData.bullseye.state);
                 }
+            } else if (wsData.code === 'BullseyeGuess') {
+                // Update state with guess info
+                if (wsData.bullseye && wsData.bullseye.state) {
+                    await mergeGameState(wsData.bullseye.state);
+                }
+            } else if (wsData.code === 'BullseyeRoundEnded') {
+                // Update state
+                if (wsData.bullseye && wsData.bullseye.state) {
+                    await mergeGameState(wsData.bullseye.state);
+
+                    // Check if game is finished
+                    if (wsData.bullseye.state.status === 'Finished') {
+                        console.log('Bullseye Tracker: Game Finished via WS!');
+                        saveGame(false);
+                    }
+                }
+            } else if (wsData.code === 'GameAborted') {
+                console.log('Bullseye Tracker: Game Aborted via WS!');
+                // For aborted games, we might not have the full state in the WS payload (it's null in the example)
+                // So we save whatever we have currently
+                saveGame(true);
             }
-        } else if (wsData.code === 'GameAborted') {
-            console.log('Bullseye Tracker: Game Aborted via WS!');
-            // For aborted games, we might not have the full state in the WS payload (it's null in the example)
-            // So we save whatever we have currently
-            saveGame(true);
-        }
+        })();
     }
 });
 
-function mergeGameState(newState) {
+async function mergeGameState(newState) {
     if (!currentGameData) {
         // If we missed the initial API call (e.g. refresh mid-game), initialize from WS state
         currentGameData = newState;
@@ -282,7 +284,8 @@ function mergeGameState(newState) {
     updateScoreFromGameData(currentGameData);
 
     // Try to fetch nicknames if missing
-    fetchMissingNicknames();
+    // AWAIT this to ensure we have nicks before potential save
+    await fetchMissingNicknames();
 
     // Recalculate derived stats if needed (like total duration if not provided directly)
     // The backend expects 'totalDuration' at the top level of payload, or we can put it in the state.

@@ -8,50 +8,15 @@ const games = ref([]);
 const loading = ref(true);
 const error = ref(null);
 
-// Mock Data for demonstration if API is empty
-const mockGames = [
-  {
-    id: 1,
-    game_id: 'mock-uuid-1234',
-    map_name: 'A Community World',
-    score: 24500,
-    max_score: 25000,
-    total_duration: 345,
-    round_count: 5,
-    played_at: new Date().toISOString(),
-    players: ['Pierre', 'Bot'],
-    country_codes: ['fr', 'us', 'jp', 'br', 'au'],
-    is_finished: true
-  },
-  {
-    id: 2,
-    game_id: 'mock-uuid-5678',
-    map_name: 'Diverse World',
-    score: 12000,
-    max_score: 25000,
-    total_duration: 120,
-    round_count: 5,
-    played_at: new Date(Date.now() - 86400000).toISOString(),
-    players: ['Pierre'],
-    country_codes: ['es', 'it'],
-    is_finished: false
-  }
-];
-
 onMounted(async () => {
   try {
     const data = await fetchGames();
-    if (data && data.length > 0) {
+    if (data) {
       games.value = data;
-    } else {
-      console.log('API returned empty, using mock data');
-      games.value = mockGames;
     }
   } catch (err) {
     console.error('Failed to fetch games:', err);
     error.value = err.message;
-    // Fallback to mock data on error for demo
-    games.value = mockGames;
   } finally {
     loading.value = false;
   }

@@ -97,7 +97,7 @@ async fn main() {
         score INTEGER,
         round_time INTEGER,
         total_duration INTEGER,
-        played_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        played_at TEXT DEFAULT CURRENT_TIMESTAMP,
         data TEXT
     );
     "#;
@@ -260,6 +260,7 @@ struct Panorama {
 struct Player {
     #[serde(rename = "playerId")]
     player_id: Option<String>,
+    nick: Option<String>,
     guesses: Option<Vec<Guess>>,
 }
 
@@ -416,7 +417,7 @@ struct GameSummary {
 )]
 async fn get_games(State(pool): State<AnyPool>) -> Json<Vec<GameSummary>> {
     let rows = sqlx::query(
-        "SELECT id, game_id, map_name, score, round_time, total_duration, CAST(played_at AS TEXT) as played_at, data FROM games ORDER BY played_at DESC"
+        "SELECT id, game_id, map_name, score, round_time, total_duration, played_at, data FROM games ORDER BY played_at DESC"
     )
     .fetch_all(&pool)
     .await;
@@ -444,7 +445,11 @@ async fn get_games(State(pool): State<AnyPool>) -> Json<Vec<GameSummary>> {
                 if let Some(state) = payload.bullseye.as_ref().and_then(|b| b.state.as_ref()) {
                     // Extract Players
                     if let Some(p_list) = &state.players {
-                        players = p_list.iter().map(|p| p.player_id.clone().unwrap_or_default()).collect();
+                        players = p_list.iter().map(|p| {
+                            p.nick.clone()
+                                .or_else(|| p.player_id.clone())
+                                .unwrap_or_else(|| "Unknown".to_string())
+                        }).collect();
                     }
                     
                     // Extract Country Codes (Flags)
@@ -587,8 +592,8 @@ struct TeamStats {
 async fn get_team_leaderboard(State(pool): State<AnyPool>) -> Json<Vec<TeamStats>> {
     let rows = sqlx::query("SELECT data FROM games").fetch_all(&pool).await.unwrap_or_default();
 
-    // Map of Sorted Player IDs -> (Player Names, Total Score, Count, Total Duration)
-    let mut team_stats: std::collections::HashMap<String, (Vec<String>, i32, i32, i64)> = std::collections::HashMap::new();
+    // Map of Sorted Player IDs -> (Player Names, Player IDs, Total Score, Count, Total Duration)
+    let mut team_stats: std::collections::HashMap<String, (Vec<String>, Vec<String>, i32, i32, i64)> = std::collections::HashMap::new();
 
     for row in rows {
         let data_str: Option<String> = row.get("data");
@@ -601,16 +606,9 @@ async fn get_team_leaderboard(State(pool): State<AnyPool>) -> Json<Vec<TeamStats
                             let mut current_team_players: Vec<(String, String)> = players.iter().map(|p| {
                                 (
                                     p.player_id.clone().unwrap_or_default(),
-                                    // Try to find nick in payload if possible, otherwise use ID or "Unknown"
-                                    // The payload structure for players in state is minimal (playerId, guesses)
-                                    // We might need to look at the top level 'lobby' or 'players' if available
-                                    // But for now let's use what we have. 
-                                    // Wait, the user provided JSON shows 'players' in 'bullseye.state' has 'playerId' and 'guesses'.
-                                    // The 'lobby' has 'nick'.
-                                    // Let's try to find the nick from the lobby part of the payload if we saved it?
-                                    // The current BullseyePayload struct has 'lobby' as Option<serde_json::Value>.
-                                    // We can try to extract nicks from there.
-                                    "Unknown".to_string() 
+                                    p.nick.clone()
+                                        .or_else(|| p.player_id.clone())
+                                        .unwrap_or_else(|| "Unknown".to_string())
                                 )
                             }).collect();
 
@@ -631,11 +629,12 @@ async fn get_team_leaderboard(State(pool): State<AnyPool>) -> Json<Vec<TeamStats
                             let duration = payload.total_duration.unwrap_or(0) as i64;
 
                             // Update stats
-                            let entry = team_stats.entry(team_key.clone()).or_insert((Vec::new(), 0, 0, 0));
+                            let entry = team_stats.entry(team_key.clone()).or_insert((Vec::new(), Vec::new(), 0, 0, 0));
                             
-                            // Update player IDs if not set (first time)
+                            // Update player Names/IDs if not set (first time)
                             if entry.0.is_empty() {
-                                entry.0 = current_team_players.iter().map(|p| p.0.clone()).collect();
+                                entry.0 = current_team_players.iter().map(|p| p.1.clone()).collect(); // Names
+                                entry.1 = current_team_players.iter().map(|p| p.0.clone()).collect(); // IDs
                             }
                             
                             // Try to update names if we have "Unknown"
@@ -643,9 +642,9 @@ async fn get_team_leaderboard(State(pool): State<AnyPool>) -> Json<Vec<TeamStats
                             // OR we can try to extract names from the lobby data if present.
                             // Let's improve name extraction later.
                             
-                            entry.1 += game_score;
-                            entry.2 += 1;
-                            entry.3 += duration;
+                            entry.2 += game_score;
+                            entry.3 += 1;
+                            entry.4 += duration;
                         }
                     }
                 }
@@ -653,9 +652,9 @@ async fn get_team_leaderboard(State(pool): State<AnyPool>) -> Json<Vec<TeamStats
         }
     }
 
-    let mut leaderboard: Vec<TeamStats> = team_stats.into_iter().map(|(_key, (ids, total_score, count, total_duration))| {
+    let mut leaderboard: Vec<TeamStats> = team_stats.into_iter().map(|(_key, (names, ids, total_score, count, total_duration))| {
         TeamStats {
-            team_name: ids.join(", "), // Placeholder: Use IDs as names for now
+            team_name: names.join(", "), // Placeholder: Use IDs as names for now
             player_ids: ids,
             games_played: count,
             average_score: if count > 0 { total_score as f64 / count as f64 } else { 0.0 },
