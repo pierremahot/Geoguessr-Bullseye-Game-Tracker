@@ -16,11 +16,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         finishedGames.forEach(game => {
             if (Array.isArray(game.players)) {
                 game.players.forEach(player => {
-                    if (!playerStats[player]) {
-                        playerStats[player] = { totalScore: 0, gameCount: 0 };
+                    const name = (typeof player === 'object' && player !== null) ? (player.nick || player.playerId) : player;
+                    if (!playerStats[name]) {
+                        playerStats[name] = { totalScore: 0, gameCount: 0 };
                     }
-                    playerStats[player].totalScore += game.score;
-                    playerStats[player].gameCount++;
+                    playerStats[name].totalScore += game.score;
+                    playerStats[name].gameCount++;
                 });
             }
         });
@@ -37,7 +38,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const teamStats = {};
         finishedGames.forEach(game => {
             if (Array.isArray(game.players) && game.players.length > 0) {
-                const teamKey = [...game.players].sort().join(', ');
+                const teamKey = game.players
+                    .map(p => (typeof p === 'object' && p !== null) ? (p.nick || p.playerId) : p)
+                    .sort()
+                    .join(', ');
+
                 if (!teamStats[teamKey]) {
                     teamStats[teamKey] = { totalScore: 0, gameCount: 0 };
                 }
@@ -111,9 +116,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             const playerStatsOnMap = {};
             gamesOnMap.forEach(game => {
                 game.players.forEach(player => {
-                    if (!playerStatsOnMap[player]) playerStatsOnMap[player] = { gameCount: 0, totalScore: 0 };
-                    playerStatsOnMap[player].gameCount++;
-                    playerStatsOnMap[player].totalScore += game.score;
+                    const name = (typeof player === 'object' && player !== null) ? (player.nick || player.playerId) : player;
+                    if (!playerStatsOnMap[name]) playerStatsOnMap[name] = { gameCount: 0, totalScore: 0 };
+                    playerStatsOnMap[name].gameCount++;
+                    playerStatsOnMap[name].totalScore += game.score;
                 });
             });
             const sortedPlayersOnMap = Object.entries(playerStatsOnMap).map(([name, stats]) => ({ name, ...stats, avgScore: stats.totalScore / stats.gameCount })).sort((a, b) => b.gameCount - a.gameCount);
@@ -122,7 +128,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             const teamStatsOnMap = {};
             gamesOnMap.forEach(game => {
                 if (game.players.length > 0) {
-                    const teamKey = [...game.players].sort().join(', ');
+                    const teamKey = game.players
+                        .map(p => (typeof p === 'object' && p !== null) ? (p.nick || p.playerId) : p)
+                        .sort()
+                        .join(', ');
+
                     if (!teamStatsOnMap[teamKey]) teamStatsOnMap[teamKey] = { gameCount: 0, totalScore: 0 };
                     teamStatsOnMap[teamKey].gameCount++;
                     teamStatsOnMap[teamKey].totalScore += game.score;

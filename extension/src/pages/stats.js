@@ -28,7 +28,10 @@ document.addEventListener('DOMContentLoaded', async () => { // <-- Passage en as
 
     // Filtrer les parties pour n'inclure que celles de ce joueur
     const playerGames = allGames.filter(game =>
-        Array.isArray(game.players) && game.players.includes(playerName)
+        Array.isArray(game.players) && game.players.some(p => {
+            const name = (typeof p === 'object' && p !== null) ? (p.nick || p.playerId) : p;
+            return name === playerName;
+        })
     );
 
     if (playerGames.length === 0) {
@@ -189,8 +192,13 @@ function renderBestTeam(games, currentPlayerName) {
     games.forEach(game => {
         // Ne considérer que les parties à 2 joueurs pour "Meilleure Équipe" pour simplifier
         if (game.players.length === 2) {
-            const teammate = game.players.find(p => p !== currentPlayerName);
-            if (teammate) {
+            const teammateObj = game.players.find(p => {
+                const name = (typeof p === 'object' && p !== null) ? (p.nick || p.playerId) : p;
+                return name !== currentPlayerName;
+            });
+
+            if (teammateObj) {
+                const teammate = (typeof teammateObj === 'object' && teammateObj !== null) ? (teammateObj.nick || teammateObj.playerId) : teammateObj;
                 if (!teammateStats.has(teammate)) {
                     teammateStats.set(teammate, { total: 0, count: 0 });
                 }

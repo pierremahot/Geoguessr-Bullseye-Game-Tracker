@@ -1,0 +1,111 @@
+// it will append at each end of the round in the websocket
+{
+    "code": "BullseyeRoundEnded",
+    "gameId": "b67d1e69-e2f6-4dce-ad87-b852e9106cbd",
+    "playerId": null,
+    "payload": null,
+    "timestamp": "2025-12-01T21:20:38.0408939Z",
+    "lobby": null,
+    "countryGuess": null,
+    "coordinateGuess": null,
+    "battleRoyaleGameState": null,
+    "battleRoyalePlayer": null,
+    "duel": null,
+    "bullseye": {
+        "state": {
+            "gameId": "b67d1e69-e2f6-4dce-ad87-b852e9106cbd",
+            "status": "Ongoing",
+            "options": {
+                "movementOptions": {
+                    "forbidMoving": false,
+                    "forbidZooming": false,
+                    "forbidRotating": false
+                },
+                "roundCount": 5,
+                "mapSlug": "5b0d907bfaa4cf3ce43bc6b1",
+                "roundTime": 0,
+                "guessMapType": "roadmap"
+            },
+            "version": 7,
+            "currentRoundNumber": 1,
+            "rounds": [
+                {
+                    "roundNumber": 1,
+                    "panorama": {
+                        "panoId": "574877447341793048543158377079524D7432664867",
+                        "lat": 43.32366180419922,
+                        "lng": 5.386637210845947,
+                        "countryCode": "fr",
+                        "heading": 0,
+                        "pitch": 0,
+                        "zoom": 0
+                    },
+                    "startTime": "2025-12-01T21:19:36.6217492+00:00",
+                    "endTime": null,
+                    "state": "Ended",
+                    "score": {
+                        "isAnswerWithinRadius": true,
+                        "points": 1000,
+                        "maxPoints": 5000,
+                        "distance": 25127.6067281652
+                    }
+                }
+            ],
+            "players": [
+                {
+                    "playerId": "5d5afe4db4ec171bd432ac55",
+                    "guesses": [
+                        {
+                            "roundNumber": 1,
+                            "lat": 46.93619897358828,
+                            "lng": 1.487592693629325,
+                            "size": 5,
+                            "isDraft": false,
+                            "score": {
+                                "isAnswerWithinRadius": false,
+                                "points": 0,
+                                "maxPoints": 5000,
+                                "distance": 0
+                            }
+                        }
+                    ]
+                },
+                {
+                    "playerId": "692e0515735fa457d1fef2c5",
+                    "guesses": [
+                        {
+                            "roundNumber": 1,
+                            "lat": 43.47983018743468,
+                            "lng": 5.161832515068161,
+                            "size": 4,
+                            "isDraft": false,
+                            "score": {
+                                "isAnswerWithinRadius": true,
+                                "points": 1000,
+                                "maxPoints": 5000,
+                                "distance": 25127.6067281652
+                            }
+                        }
+                    ]
+                }
+            ],
+            "boundingBox": {
+                "min": {
+                    "lat": 41.306744054561634,
+                    "lng": -5.731410076152315
+                },
+                "max": {
+                    "lat": 51.27424536739651,
+                    "lng": 9.902731836681596
+                }
+            },
+            "hostPlayerId": "5d5afe4db4ec171bd432ac55",
+            "mapName": "500 000 lieux en France m\u00E9tropolitaine !"
+        },
+        "guess": null,
+        "location": null,
+        "recipientPlayerId": null,
+        "playerId": ""
+    },
+    "liveChallenge": null
+}

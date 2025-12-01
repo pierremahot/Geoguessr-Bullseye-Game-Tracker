@@ -42,9 +42,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (Array.isArray(game.players) && game.players.length > 0) {
                 const statsPageUrl = chrome.runtime.getURL('pages/stats.html');
                 // C'est un tableau (nouvelle méthode) -> Rendre cliquable
-                playersHtml = game.players.map(p =>
-                    `<a href="${statsPageUrl}?player=${encodeURIComponent(p)}" target="_blank" class="player-tag clickable">${p}</a>`
-                ).join(' ');
+                playersHtml = game.players.map(p => {
+                    let name = p;
+                    if (typeof p === 'object' && p !== null) {
+                        name = p.nick || p.playerId || 'Unknown';
+                    }
+                    return `<a href="${statsPageUrl}?player=${encodeURIComponent(name)}" target="_blank" class="player-tag clickable">${name}</a>`;
+                }).join(' ');
             } else if (typeof game.players === 'string' && game.players) {
                 // C'est une chaîne (ancienne méthode)
                 playersHtml = `<span class="player-tag">${game.players}</span>`;

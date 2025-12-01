@@ -416,11 +416,21 @@ struct GameSummary {
 )]
 async fn get_games(State(pool): State<AnyPool>) -> Json<Vec<GameSummary>> {
     let rows = sqlx::query(
-        "SELECT id, game_id, map_name, score, round_time, total_duration, played_at, data FROM games ORDER BY played_at DESC"
+        "SELECT id, game_id, map_name, score, round_time, total_duration, CAST(played_at AS TEXT) as played_at, data FROM games ORDER BY played_at DESC"
     )
     .fetch_all(&pool)
-    .await
-    .unwrap_or_default();
+    .await;
+
+    let rows = match rows {
+        Ok(r) => {
+            println!("Fetched {} games from DB", r.len());
+            r
+        },
+        Err(e) => {
+            eprintln!("Failed to fetch games: {}", e);
+            return Json(Vec::new());
+        }
+    };
 
     let games = rows.into_iter().map(|row| {
         let mut players = Vec::new();

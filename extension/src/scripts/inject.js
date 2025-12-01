@@ -7,12 +7,6 @@
         try {
             const url = args[0] instanceof Request ? args[0].url : args[0];
 
-            // Check if the URL matches the lobby API pattern
-            // Debug: Log all bullseye related fetches
-            if (url.includes('bullseye')) {
-                console.log('Bullseye Tracker: Debug - Fetch URL:', url);
-            }
-
             // Pattern 1: Lobby Data (Legacy/Party)
             if ((url.includes('/api/parties/v2/') && url.includes('/lobby')) ||
                 (url.includes('/api/lobby/') && url.includes('/join'))) {
@@ -42,21 +36,6 @@
                     }, '*');
                 }).catch(err => console.error('Bullseye Tracker: Failed to parse game API data', err));
             }
-
-            // Pattern 2: Guess Data (API)
-            // https://game-server.geoguessr.com/api/bullseye/*/guess
-            if (url.includes('/api/bullseye/') && url.includes('/guess')) {
-                console.log('Bullseye Tracker: Guess data intercepted:', url);
-                const clone = response.clone();
-                clone.json().then(data => {
-                    // We only care if it's not a draft, but we send everything to content.js to decide
-                    console.log('Bullseye Tracker: Intercepted guess payload:', data);
-                    window.postMessage({
-                        type: 'BULLSEYE_GUESS',
-                        payload: data
-                    }, '*');
-                }).catch(err => console.error('Bullseye Tracker: Failed to parse guess data', err));
-            }
         } catch (err) {
             console.error('Bullseye Tracker: Error in fetch interceptor', err);
         }
@@ -77,8 +56,14 @@
                     // Geoguessr usually sends JSON strings
                     if (event.data.startsWith('{')) {
                         const data = JSON.parse(event.data);
-                        if (data.code === 'BullseyeGuess') {
-                            console.log('Bullseye Tracker: WebSocket Guess intercepted:', data);
+
+                        // Capture relevant Bullseye events
+                        if (data.code === 'BullseyeGuess' ||
+                            data.code === 'BullseyeRoundStarted' ||
+                            data.code === 'BullseyeRoundEnded' ||
+                            data.code === 'GameAborted') {
+
+                            console.log(`Bullseye Tracker: WebSocket ${data.code} intercepted:`, data);
                             window.postMessage({
                                 type: 'BULLSEYE_WS',
                                 payload: data

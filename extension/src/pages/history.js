@@ -37,9 +37,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Filtrer les jeux
         let filteredGames = allGames.filter(game => {
             // Filtre Joueur (vérifie si au moins un joueur correspond)
-            const playerMatch = game.players.some(p =>
-                p.toLowerCase().includes(playersValue)
-            );
+            const playerMatch = game.players.some(p => {
+                let name = p;
+                if (typeof p === 'object' && p !== null) {
+                    name = p.nick || p.playerId || '';
+                }
+                return name.toLowerCase().includes(playersValue);
+            });
             // Filtre Carte (gère les anciennes parties sans mapName)
             const mapName = game.mapName || '';
             const mapMatch = mapName.toLowerCase().includes(mapValue);
@@ -66,8 +70,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                     break;
                 case 'players':
                     // Trie par le premier joueur de la liste
-                    valA = (a.players[0] || '').toLowerCase();
-                    valB = (b.players[0] || '').toLowerCase();
+                    valA = a.players[0];
+                    if (typeof valA === 'object' && valA !== null) valA = valA.nick || valA.playerId || '';
+                    valA = (valA || '').toLowerCase();
+
+                    valB = b.players[0];
+                    if (typeof valB === 'object' && valB !== null) valB = valB.nick || valB.playerId || '';
+                    valB = (valB || '').toLowerCase();
                     break;
                 case 'map': // <-- NOUVEAU
                     valA = (a.mapName || '').toLowerCase();
@@ -112,9 +121,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (Array.isArray(game.players) && game.players.length > 0) {
                 // MODIFIÉ : Transformer les joueurs en liens vers stats.html
                 const statsPageUrl = chrome.runtime.getURL('pages/stats.html');
-                playersHtml = game.players.map(p =>
-                    `<a href="${statsPageUrl}?player=${encodeURIComponent(p)}" target="_blank" class="player-tag clickable">${p}</a>`
-                ).join(' ');
+                playersHtml = game.players.map(p => {
+                    let name = p;
+                    if (typeof p === 'object' && p !== null) {
+                        name = p.nick || p.playerId || 'Unknown';
+                    }
+                    return `<a href="${statsPageUrl}?player=${encodeURIComponent(name)}" target="_blank" class="player-tag clickable">${name}</a>`;
+                }).join(' ');
             } else if (typeof game.players === 'string' && game.players) {
                 // Gérer l'ancien format (non cliquable)
                 playersHtml = `<span class="player-tag">${game.players}</span>`;
