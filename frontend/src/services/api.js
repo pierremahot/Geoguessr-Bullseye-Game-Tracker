@@ -17,10 +17,38 @@ export async function fetchStats() {
     return await response.json();
 }
 
-export async function fetchTeamLeaderboard() {
-    const response = await fetch(`${API_URL}/leaderboard/teams`);
+export async function fetchTeamLeaderboard(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    const response = await fetch(`${API_URL}/leaderboard/teams?${query}`);
     if (!response.ok) {
         throw new Error('Failed to fetch leaderboard');
     }
     return await response.json();
+}
+
+export async function fetchPlayerStats(playerId, params = {}) {
+    const query = new URLSearchParams(params).toString();
+    const response = await fetch(`${API_URL}/players/${playerId}/stats?${query}`);
+    if (!response.ok) {
+        throw new Error('Failed to fetch player stats');
+    }
+    return await response.json();
+}
+
+export async function fetchTeamStats(teamId, params = {}) {
+    const query = new URLSearchParams(params).toString();
+    const response = await fetch(`${API_URL}/teams/${teamId}/stats?${query}`);
+    if (!response.ok) {
+        throw new Error('Failed to fetch team stats');
+    }
+    return await response.json();
+}
+
+export async function deleteGame(id) {
+    const response = await fetch(`${API_URL}/games/${id}`, {
+        method: 'DELETE',
+    });
+    if (!response.ok) {
+        throw new Error('Failed to delete game');
+    }
 }

@@ -1,21 +1,27 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { fetchTeamLeaderboard } from '../services/api';
 import { Trophy, Users, Clock } from 'lucide-vue-next';
 
 const teams = ref([]);
 const loading = ref(true);
 const error = ref(null);
+const excludeAbandons = ref(true); // Default to true
 
-onMounted(async () => {
+const loadLeaderboard = async () => {
+  loading.value = true;
   try {
-    teams.value = await fetchTeamLeaderboard();
+    teams.value = await fetchTeamLeaderboard({ exclude_abandons: excludeAbandons.value });
   } catch (err) {
     error.value = err.message;
   } finally {
     loading.value = false;
   }
-});
+};
+
+onMounted(loadLeaderboard);
+
+watch(excludeAbandons, loadLeaderboard);
 
 function formatDuration(seconds) {
   if (!seconds) return '-';
@@ -32,6 +38,13 @@ function formatDuration(seconds) {
         <Trophy class="w-8 h-8 text-yellow-400" />
         Team Leaderboard
       </h2>
+      
+      <div class="flex items-center gap-4 bg-gray-800/50 p-2 rounded-lg border border-gray-700">
+        <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer select-none">
+          <input type="checkbox" v-model="excludeAbandons" class="rounded bg-gray-700 border-gray-600 text-purple-500 focus:ring-purple-500/50">
+          Exclude Abandons
+        </label>
+      </div>
     </header>
 
     <div v-if="loading" class="text-gray-400 animate-pulse">Loading leaderboard...</div>

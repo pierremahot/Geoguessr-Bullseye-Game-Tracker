@@ -10,9 +10,11 @@
   },
   "dependencies": {
     "@tanstack/vue-table": "^8.21.3",
+    "chart.js": "^4.5.1",
     "flag-icons": "^7.5.0",
     "lucide-vue-next": "^0.555.0",
     "vue": "^3.5.24",
+    "vue-chartjs": "^5.3.3",
     "vue-router": "^4.6.3"
   },
   "devDependencies": {

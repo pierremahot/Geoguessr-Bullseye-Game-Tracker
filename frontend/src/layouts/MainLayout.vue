@@ -7,7 +7,7 @@ import { Home, Trophy, Activity } from 'lucide-vue-next';
   <div class="min-h-screen bg-gray-900 text-gray-100 font-sans selection:bg-purple-500 selection:text-white">
     <!-- Navigation Bar -->
     <nav class="sticky top-0 z-50 bg-gray-900/80 backdrop-blur-md border-b border-gray-800">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
           <div class="flex items-center">
             <div class="flex-shrink-0">
@@ -33,7 +33,7 @@ import { Home, Trophy, Activity } from 'lucide-vue-next';
     </nav>
 
     <!-- Page Content -->
-    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <main class="max-w-full mx-auto py-6 px-4 sm:px-6 lg:px-8">
       <div class="px-4 py-6 sm:px-0">
         <RouterView v-slot="{ Component }">
           <transition name="fade" mode="out-in">

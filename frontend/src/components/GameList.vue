@@ -1,27 +1,51 @@
 <script setup>
 import { ref, onMounted, h } from 'vue';
 import { RouterLink } from 'vue-router';
-import { fetchGames } from '../services/api';
+import { fetchGames, fetchStats, deleteGame } from '../services/api';
 import DataTable from './DataTable.vue';
-import { History, Clock, Users, Map as MapIcon, Hash, Flag, Trophy } from 'lucide-vue-next';
+import { History, Clock, Users, Map as MapIcon, Hash, Flag, Trophy, Trash2 } from 'lucide-vue-next';
 
 const games = ref([]);
+const totalGames = ref(0);
 const loading = ref(true);
 const error = ref(null);
 
-onMounted(async () => {
+const loadData = async () => {
+  loading.value = true;
   try {
-    const data = await fetchGames();
-    if (data) {
-      games.value = data;
+    const [gamesData, statsData] = await Promise.all([
+      fetchGames(),
+      fetchStats()
+    ]);
+    
+    if (gamesData) {
+      games.value = gamesData;
+    }
+    if (statsData) {
+      totalGames.value = statsData.total_games;
     }
   } catch (err) {
-    console.error('Failed to fetch games:', err);
+    console.error('Failed to fetch data:', err);
     error.value = err.message;
   } finally {
     loading.value = false;
   }
-});
+};
+
+onMounted(loadData);
+
+async function handleDelete(id) {
+  if (!confirm('Are you sure you want to delete this game? This action cannot be undone.')) {
+    return;
+  }
+
+  try {
+    await deleteGame(id);
+    await loadData(); // Refresh list
+  } catch (err) {
+    alert('Failed to delete game: ' + err.message);
+  }
+}
 
 function formatDate(dateStr) {
   return new Date(dateStr).toLocaleString(undefined, { 
@@ -45,7 +69,18 @@ const columns = [
   {
     accessorKey: 'game_id',
     header: () => h('div', { class: 'flex items-center gap-2' }, [h(Hash, { class: 'w-4 h-4' }), 'ID']),
-    cell: info => h('span', { class: 'font-mono text-xs text-gray-500 select-all', title: info.getValue() }, info.getValue() ? info.getValue().substring(0, 8) + '...' : '-'),
+    cell: info => {
+      const gameId = info.getValue();
+      if (!gameId) return h('span', { class: 'text-gray-500' }, '-');
+      
+      return h('a', { 
+        href: `https://www.geoguessr.com/fr/bullseye/${gameId}`,
+        target: '_blank',
+        rel: 'noopener noreferrer',
+        class: 'font-mono text-xs text-blue-400 hover:text-blue-300 hover:underline select-all',
+        title: gameId 
+      }, gameId.substring(0, 8) + '...');
+    },
   },
   {
     accessorKey: 'country_codes',
@@ -88,12 +123,27 @@ const columns = [
     cell: info => {
       const players = info.getValue() || [];
       if (players.length === 0) return h('span', { class: 'text-gray-500 text-xs' }, 'Unknown');
-      return h('div', { class: 'flex flex-col gap-1' }, players.map(p => 
+      
+      const playerList = h('div', { class: 'flex flex-col gap-1' }, players.map(p => 
         h(RouterLink, { 
           to: `/player/${p.id}`, 
           class: 'text-white font-medium text-xs hover:text-blue-400 transition-colors' 
         }, () => p.name)
       ));
+
+      if (players.length > 1) {
+        const teamId = players.map(p => p.id).sort().join(',');
+        return h('div', { class: 'flex items-start gap-2' }, [
+          h(RouterLink, {
+            to: `/team/${teamId}`,
+            class: 'p-1 bg-gray-700 rounded hover:bg-gray-600 transition-colors text-purple-400',
+            title: 'View Team Stats'
+          }, () => h(Users, { class: 'w-3 h-3' })),
+          playerList
+        ]);
+      }
+
+      return playerList;
     },
     filterFn: (row, columnId, filterValue) => {
       const players = row.getValue(columnId);
@@ -145,20 +195,33 @@ const columns = [
     header: () => h('div', { class: 'text-right' }, 'Duration'),
     cell: info => h('div', { class: 'text-right font-mono text-xs text-gray-400' }, formatDuration(info.getValue())),
   },
+  {
+    id: 'actions',
+    header: '',
+    cell: info => h('button', {
+      onClick: () => handleDelete(info.row.original.id),
+      class: 'p-2 text-gray-500 hover:text-red-500 transition-colors rounded hover:bg-red-500/10',
+      title: 'Delete Game'
+    }, h(Trash2, { class: 'w-4 h-4' })),
+    enableSorting: false,
+  }
 ];
 
 </script>
 
 <template>
-  <div class="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700 shadow-xl flex flex-col h-[calc(100vh-12rem)]">
-    <div class="flex justify-between items-center mb-6">
+  <div class="bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700 flex flex-col h-[calc(100vh-12rem)] w-full overflow-hidden">
+    <div class="flex justify-between items-center p-6 border-b border-gray-700/50">
       <h2 class="text-2xl font-bold text-white flex items-center gap-2">
         <History class="w-6 h-6 text-purple-400" />
         Game History
+        <span v-if="totalGames > 0" class="text-sm font-normal text-gray-400 ml-2">({{ totalGames }} total)</span>
       </h2>
       <div v-if="loading" class="text-gray-400 text-sm animate-pulse">Loading...</div>
     </div>
     
-    <DataTable :data="games" :columns="columns" />
+    <div class="flex-grow min-h-0 w-full">
+      <DataTable :data="games" :columns="columns" />
+    </div>
   </div>
 </template>
