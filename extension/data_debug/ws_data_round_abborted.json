@@ -1,0 +1,15 @@
+{
+    "code": "GameAborted",
+    "gameId": "e4adc2ee-d713-453d-8c53-ca1a02cafaff",
+    "playerId": null,
+    "payload": null,
+    "timestamp": "2025-12-01T21:51:06.676866Z",
+    "lobby": null,
+    "countryGuess": null,
+    "coordinateGuess": null,
+    "battleRoyaleGameState": null,
+    "battleRoyalePlayer": null,
+    "duel": null,
+    "bullseye": null,
+    "liveChallenge": null
+}

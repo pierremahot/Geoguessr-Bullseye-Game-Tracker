@@ -1,0 +1,21 @@
+{
+  "name": "geoguessr-bullseye-game-tracker",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "bun-types": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "apexcharts": "^3.49.1"
+  },
+  "scripts": {
+    "build:js": "bun build ./src/pages/stats.js ./src/pages/history.js ./src/pages/popup.js ./src/pages/leaderboard.js ./src/pages/options.js --outdir ./dist/pages && bun build ./src/scripts/content.js ./src/scripts/inject.js --outdir ./dist/scripts",
+    "dev:js": "bun build ./src/pages/stats.js ./src/pages/history.js ./src/pages/popup.js ./src/pages/leaderboard.js ./src/pages/options.js --outdir ./dist/pages --no-minify --sourcemap=inline && bun build ./src/scripts/content.js ./src/scripts/inject.js --outdir ./dist/scripts --no-minify --sourcemap=inline",
+    "build:copy": "cp ./src/manifest.json ./dist/ && cp -r ./src/pages/*.html ./dist/pages/ && cp -r ./src/pages/*.css ./dist/pages/ && cp -r ./src/icons ./dist/",
+    "build": "rm -rf ./dist && mkdir -p ./dist/pages && mkdir -p ./dist/scripts && bun run build:js && bun run build:copy",
+    "dev": "rm -rf ./dist && mkdir -p ./dist/pages && mkdir -p ./dist/scripts && bun run dev:js && bun run build:copy"
+  }
+}

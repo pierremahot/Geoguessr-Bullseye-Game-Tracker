@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bullseye Tracker Options</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a2e;
+            color: #e0e0e0;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #4ecca3;
+            border-bottom: 2px solid #4ecca3;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #333;
+            background-color: #16213e;
+            color: #fff;
+            box-sizing: border-box;
+        }
+
+        .help-text {
+            font-size: 0.85em;
+            color: #a0a0a0;
+            margin-top: 5px;
+        }
+
+        button {
+            background-color: #4ecca3;
+            color: #1a1a2e;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1em;
+        }
+
+        button:hover {
+            background-color: #45b293;
+        }
+
+        #status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .success {
+            background-color: rgba(78, 204, 163, 0.2);
+            color: #4ecca3;
+        }
+
+        .error {
+            background-color: rgba(233, 69, 96, 0.2);
+            color: #e94560;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Bullseye Tracker Configuration</h1>
+
+    <div class="form-group">
+        <label for="apiUrl">API URL</label>
+        <input type="text" id="apiUrl" placeholder="http://localhost:3000/api/submit-game">
+        <div class="help-text">The endpoint where game data will be sent (POST). http://localhost:3000/api/submit-game
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="apiToken">API Token (Optional)</label>
+        <input type="password" id="apiToken" placeholder="Secret Token">
+        <div class="help-text">Token sent in the 'Authorization' header (Bearer).</div>
+    </div>
+
+    <button id="saveBtn">Save Settings</button>
+    <div id="status"></div>
+
+    <script src="options.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,63 @@
+// this call is used at the start of the game before ws take the lead for the data game info
+{
+    "gameId": "b67d1e69-e2f6-4dce-ad87-b852e9106cbd",
+    "status": "Ongoing",
+    "options": {
+        "movementOptions": {
+            "forbidMoving": false,
+            "forbidZooming": false,
+            "forbidRotating": false
+        },
+        "roundCount": 5,
+        "mapSlug": "5b0d907bfaa4cf3ce43bc6b1",
+        "roundTime": 0,
+        "guessMapType": "roadmap"
+    },
+    "version": 1,
+    "currentRoundNumber": 1,
+    "rounds": [
+        {
+            "roundNumber": 1,
+            "panorama": {
+                "panoId": "574877447341793048543158377079524D7432664867",
+                "lat": 43.32366180419922,
+                "lng": 5.386637210845947,
+                "countryCode": "fr",
+                "heading": 0,
+                "pitch": 0,
+                "zoom": 0
+            },
+            "startTime": "2025-12-01T21:19:36.4364648+00:00",
+            "endTime": null,
+            "state": "Starting",
+            "score": {
+                "isAnswerWithinRadius": false,
+                "points": 0,
+                "maxPoints": 5000,
+                "distance": 0
+            }
+        }
+    ],
+    "players": [
+        {
+            "playerId": "5d5afe4db4ec171bd432ac55",
+            "guesses": []
+        },
+        {
+            "playerId": "692e0515735fa457d1fef2c5",
+            "guesses": []
+        }
+    ],
+    "boundingBox": {
+        "min": {
+            "lat": 41.306744054561634,
+            "lng": -5.731410076152315
+        },
+        "max": {
+            "lat": 51.27424536739651,
+            "lng": 9.902731836681596
+        }
+    },
+    "hostPlayerId": "5d5afe4db4ec171bd432ac55",
+    "mapName": "500 000 lieux en France métropolitaine !"
+}
