@@ -89,6 +89,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import { fetchAdminPlayers, linkPlayers as apiLinkPlayers, unlinkPlayer as apiUnlinkPlayer } from '../services/api';
 
 const players = ref([]);
 const selectedPrimary = ref(null);
@@ -96,10 +97,7 @@ const selectedAlias = ref(null);
 
 const fetchPlayers = async () => {
   try {
-    const res = await fetch('http://localhost:3000/api/admin/players');
-    if (res.ok) {
-      players.value = await res.json();
-    }
+    players.value = await fetchAdminPlayers();
   } catch (e) {
     console.error("Failed to fetch players", e);
   }
@@ -109,24 +107,13 @@ const linkPlayers = async () => {
   if (!selectedPrimary.value || !selectedAlias.value) return;
   
   try {
-    const res = await fetch('http://localhost:3000/api/admin/link', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        primary_id: selectedPrimary.value,
-        alias_id: selectedAlias.value
-      })
-    });
-    
-    if (res.ok) {
-      await fetchPlayers();
-      selectedPrimary.value = null;
-      selectedAlias.value = null;
-    } else {
-      alert("Failed to link players. Ensure you aren't creating a circular link.");
-    }
+    await apiLinkPlayers(selectedPrimary.value, selectedAlias.value);
+    await fetchPlayers();
+    selectedPrimary.value = null;
+    selectedAlias.value = null;
   } catch (e) {
     console.error("Link error", e);
+    alert("Failed to link players. Ensure you aren't creating a circular link.");
   }
 };
 
@@ -134,15 +121,8 @@ const unlinkPlayer = async (aliasId) => {
   if (!confirm("Are you sure you want to unlink this player?")) return;
 
   try {
-    const res = await fetch('http://localhost:3000/api/admin/unlink', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ alias_id: aliasId })
-    });
-    
-    if (res.ok) {
-      await fetchPlayers();
-    }
+    await apiUnlinkPlayer(aliasId);
+    await fetchPlayers();
   } catch (e) {
     console.error("Unlink error", e);
   }

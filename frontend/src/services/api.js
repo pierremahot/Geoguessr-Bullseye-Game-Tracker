@@ -52,3 +52,36 @@ export async function deleteGame(id) {
         throw new Error('Failed to delete game');
     }
 }
+
+export async function fetchAdminPlayers() {
+    const response = await fetch(`${API_URL}/admin/players`);
+    if (!response.ok) {
+        throw new Error('Failed to fetch players');
+    }
+    return await response.json();
+}
+
+export async function linkPlayers(primaryId, aliasId) {
+    const response = await fetch(`${API_URL}/admin/link`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            primary_id: primaryId,
+            alias_id: aliasId
+        })
+    });
+    if (!response.ok) {
+        throw new Error('Failed to link players');
+    }
+}
+
+export async function unlinkPlayer(aliasId) {
+    const response = await fetch(`${API_URL}/admin/unlink`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ alias_id: aliasId })
+    });
+    if (!response.ok) {
+        throw new Error('Failed to unlink player');
+    }
+}
