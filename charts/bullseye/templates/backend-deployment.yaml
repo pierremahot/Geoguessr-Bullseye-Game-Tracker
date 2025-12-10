@@ -39,4 +39,9 @@ spec:
               mountPath: /data
       volumes:
         - name: data
-          emptyDir: {} # Use PersistentVolumeClaim in production
+        {{- if .Values.backend.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "bullseye.fullname" . }}-backend-data
+        {{- else }}
+          emptyDir: {}
+        {{- end }}

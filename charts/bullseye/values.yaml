@@ -13,6 +13,11 @@ backend:
   env:
     # DATABASE_URL: "postgres://..." # Override this in production if using Postgres
     # API_KEY: "your-secret-key"
+  persistence:
+    enabled: true
+    storageClass: "local-path"
+    accessMode: ReadWriteOnce
+    size: 1Gi
 
 frontend:
   image:
