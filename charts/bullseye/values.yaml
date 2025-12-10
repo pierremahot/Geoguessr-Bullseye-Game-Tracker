@@ -3,7 +3,7 @@ global:
 
 backend:
   image:
-    repository: docker.io/YOUR_USERNAME/bullseye-backend
+    repository: docker.io/wakalou/bullseye-backend
     pullPolicy: IfNotPresent
     tag: "latest"
   replicaCount: 1
@@ -16,7 +16,7 @@ backend:
 
 frontend:
   image:
-    repository: docker.io/YOUR_USERNAME/bullseye-frontend
+    repository: docker.io/wakalou/bullseye-frontend
     pullPolicy: IfNotPresent
     tag: "latest"
   replicaCount: 1

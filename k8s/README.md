@@ -29,7 +29,7 @@ If you prefer to deploy the packaged Helm chart from Docker Hub (which is built 
 
 ```yaml
   source:
-    repoURL: registry-1.docker.io/YOUR_USERNAME  # Your Docker Hub Registry
+    repoURL: registry-1.docker.io/wakalou  # Your Docker Hub Registry
     chart: bullseye
     targetRevision: 0.1.0  # The version you want to deploy
     # Note: 'path' is NOT used for OCI charts
