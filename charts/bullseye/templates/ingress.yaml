@@ -40,8 +40,8 @@ spec:
                 port:
                   number: {{ $svcPortBackend }}
           # Route everything else to frontend
-          - path: {{ .paths | first | get "path" }}
-            pathType: {{ .paths | first | get "pathType" }}
+          - path: {{ (first .paths).path }}
+            pathType: {{ (first .paths).pathType }}
             backend:
               service:
                 name: {{ $fullName }}-frontend
