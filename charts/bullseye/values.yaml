@@ -1,0 +1,40 @@
+global:
+  imagePullSecrets: []
+
+backend:
+  image:
+    repository: docker.io/YOUR_USERNAME/bullseye-backend
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 3000
+  env:
+    # DATABASE_URL: "postgres://..." # Override this in production if using Postgres
+    # API_KEY: "your-secret-key"
+
+frontend:
+  image:
+    repository: docker.io/YOUR_USERNAME/bullseye-frontend
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 80
+
+ingress:
+  enabled: true
+  className: "traefik" # Default for k3s
+  annotations: {}
+    # kubernetes.io/ingress.class: traefik
+  hosts:
+    - host: bullseye.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local

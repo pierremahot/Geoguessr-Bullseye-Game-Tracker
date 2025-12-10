@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bullseye-tracker
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/pierremahot/Geoguessr-Bullseye-Game-Tracker.git
+    targetRevision: HEAD
+    path: charts/bullseye
+    # If using OCI registry instead of git for the chart:
+    # repoURL: registry-1.docker.io/YOUR_USERNAME
+    # chart: bullseye
+    # targetRevision: 0.1.0
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: bullseye
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
