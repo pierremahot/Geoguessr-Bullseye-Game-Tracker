@@ -74,7 +74,7 @@ async fn main() {
     // For SQLite, we might need to create the DB file first if it doesn't exist
     if database_url.starts_with("sqlite://") {
         if !sqlx::Sqlite::database_exists(&database_url).await.unwrap_or(false) {
-            println!("Creating SQLite database...");
+            println!("Creating database {}", database_url);
             sqlx::Sqlite::create_database(&database_url).await.unwrap();
         }
     }
@@ -86,9 +86,12 @@ async fn main() {
         .expect("Failed to connect to DB");
 
     // Run migrations
-    // Note: For AnyPool, migrations can be tricky if SQL is dialect-specific.
-    // We'll assume the SQL is compatible or handle it manually.
-    // sqlx::migrate!().run(&pool).await.unwrap();
+    println!("Running migrations...");
+    sqlx::migrate!("./migrations")
+        .run(&pool)
+        .await
+        .expect("Failed to run migrations");
+    println!("Migrations run successfully");
     
     // Simple table creation for SQLite if migration fails or just to ensure it exists
     // This is a quick hack for the dual support without complex migration logic
@@ -131,6 +134,9 @@ async fn main() {
         .route("/api/players/:id/stats", get(get_player_stats))
         .route("/api/teams/:id/stats", get(get_team_stats))
         .route("/api/games/:id", delete(delete_game))
+    .route("/api/admin/players", get(get_admin_players))
+    .route("/api/admin/link", post(link_player))
+    .route("/api/admin/unlink", post(unlink_player))
         .layer(cors)
         .with_state(pool);
 
@@ -718,6 +724,28 @@ async fn get_team_leaderboard(
     Query(params): Query<StatsQuery>,
     State(pool): State<AnyPool>
 ) -> Json<Vec<TeamStats>> {
+    // 1. Fetch Alias Map
+    let aliases = sqlx::query("SELECT alias_id, primary_id FROM player_aliases")
+        .fetch_all(&pool)
+        .await
+        .unwrap_or_default();
+
+    let mut alias_map: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+    for row in aliases {
+        let alias_id: String = row.get("alias_id");
+        let primary_id: String = row.get("primary_id");
+        alias_map.insert(alias_id, primary_id);
+    }
+
+    // Fetch known players for name resolution
+    let mut known_players: std::collections::HashMap<String, String> = sqlx::query("SELECT id, name FROM players")
+        .fetch_all(&pool)
+        .await
+        .unwrap_or_default()
+        .into_iter()
+        .map(|row| (row.get("id"), row.get("name")))
+        .collect();
+
     let rows = sqlx::query("SELECT data FROM games").fetch_all(&pool).await.unwrap_or_default();
 
     // Map of Sorted Player IDs -> (Members, Total Score, Count, Total Duration)
@@ -729,6 +757,15 @@ async fn get_team_leaderboard(
             if let Ok(payload) = serde_json::from_str::<BullseyePayload>(&data_str) {
                 if let Some(state) = payload.bullseye.as_ref().and_then(|b| b.state.as_ref()) {
                     
+                    // Learn names
+                    if let Some(players) = &state.players {
+                        for p in players {
+                            if let (Some(pid), Some(nick)) = (&p.player_id, &p.nick) {
+                                known_players.insert(pid.clone(), nick.clone());
+                            }
+                        }
+                    }
+
                     // Filter Abandons
                     let is_finished = state.status.as_deref().map(|s| s.eq_ignore_ascii_case("finished")).unwrap_or(false);
                     if params.exclude_abandons == Some(true) && !is_finished {
@@ -737,18 +774,26 @@ async fn get_team_leaderboard(
 
                     if let Some(players) = &state.players {
                         if !players.is_empty() {
-                            // Extract player info
+                            // Extract player info and resolve to Primary IDs
                             let mut current_team_players: Vec<PlayerInfo> = players.iter().map(|p| {
+                                let pid = p.player_id.clone().unwrap_or_default();
+                                let primary_id = alias_map.get(&pid).cloned().unwrap_or(pid.clone());
+                                
+                                let name = known_players.get(&primary_id).cloned()
+                                    .or_else(|| known_players.get(&pid).cloned())
+                                    .or_else(|| p.nick.clone())
+                                    .unwrap_or_else(|| "Unknown".to_string());
+
                                 PlayerInfo {
-                                    id: p.player_id.clone().unwrap_or_default(),
-                                    name: p.nick.clone()
-                                        .or_else(|| p.player_id.clone())
-                                        .unwrap_or_else(|| "Unknown".to_string())
+                                    id: primary_id,
+                                    name
                                 }
                             }).collect();
 
                             // Sort by Player ID to ensure consistent team key
                             current_team_players.sort_by(|a, b| a.id.cmp(&b.id));
+                            // Deduplicate (in case alias + primary were in same game?)
+                            current_team_players.dedup_by(|a, b| a.id == b.id);
 
                             let team_key = current_team_players.iter().map(|p| p.id.clone()).collect::<Vec<_>>().join(",");
                             
@@ -856,6 +901,28 @@ async fn get_player_stats(
         .await
         .unwrap_or_default();
 
+    // 1. Resolve Identity
+    // Check if the requested ID is an alias
+    let primary_id_opt: Option<String> = sqlx::query_scalar("SELECT primary_id FROM player_aliases WHERE alias_id = $1")
+        .bind(&id)
+        .fetch_optional(&pool)
+        .await
+        .unwrap_or(None);
+
+    let effective_primary_id = primary_id_opt.unwrap_or_else(|| id.clone());
+
+    // Get all IDs belonging to this identity (Primary + Aliases)
+    let mut all_ids: Vec<String> = vec![effective_primary_id.clone()];
+    let aliases: Vec<String> = sqlx::query_scalar("SELECT alias_id FROM player_aliases WHERE primary_id = $1")
+        .bind(&effective_primary_id)
+        .fetch_all(&pool)
+        .await
+        .unwrap_or_default();
+    all_ids.extend(aliases);
+
+    // Use a HashSet for fast lookup
+    let target_ids: std::collections::HashSet<String> = all_ids.into_iter().collect();
+
     let mut total_games = 0;
     let mut total_score = 0;
     let mut total_duration = 0;
@@ -899,13 +966,16 @@ async fn get_player_stats(
                         }
                     }
 
-                    // Check if player is in this game
+                    // Check if ANY of our target IDs are in this game
                     let mut player_in_game = false;
                     let mut player_score = 0;
                     let mut team_members: Vec<PlayerInfo> = Vec::new();
 
                     if let Some(players) = &state.players {
-                        if let Some(p) = players.iter().find(|p| p.player_id.as_ref() == Some(&id)) {
+                        // Find the first matching player from our target_ids list
+                        // In theory, a game shouldn't have multiple players that are actually the same person (unless multi-boxing?)
+                        // We'll take the first match.
+                        if let Some(p) = players.iter().find(|p| p.player_id.as_ref().map(|pid| target_ids.contains(pid)).unwrap_or(false)) {
                             player_in_game = true;
                             
                             // Calculate score based on preference
@@ -1068,22 +1138,22 @@ async fn get_player_stats(
     }).collect();
     best_teams.sort_by(|a, b| b.average_score.partial_cmp(&a.average_score).unwrap_or(std::cmp::Ordering::Equal));
 
-    // Fetch player name
+    // Fetch player name (using effective primary ID)
     let mut player_name: Option<String> = sqlx::query_scalar("SELECT name FROM players WHERE id = ?")
-        .bind(&id)
+        .bind(&effective_primary_id)
         .fetch_optional(&pool)
         .await
         .unwrap_or(None);
 
     // Fallback: Try to find name in known_players if not in DB
     if player_name.is_none() {
-        if let Some(name) = known_players.get(&id) {
+        if let Some(name) = known_players.get(&effective_primary_id) {
             player_name = Some(name.clone());
         }
     }
 
     Json(PlayerStatsDetailed {
-        player_id: id,
+        player_id: effective_primary_id, // Return the primary ID
         total_games,
         average_score: if total_games > 0 { total_score as f64 / total_games as f64 } else { 0.0 },
         total_duration,
@@ -1098,6 +1168,7 @@ async fn get_player_stats(
 
 #[derive(Serialize, ToSchema)]
 struct TeamStatsDetailed {
+    team_id: String,
     team_name: String,
     members: Vec<PlayerInfo>,
     total_games: i32,
@@ -1125,9 +1196,31 @@ async fn get_team_stats(
     Query(params): Query<StatsQuery>,
     State(pool): State<AnyPool>
 ) -> Json<TeamStatsDetailed> {
-    let team_player_ids: Vec<String> = id.split(',').map(|s| s.trim().to_string()).collect();
+    // 1. Fetch Alias Map
+    let aliases = sqlx::query("SELECT alias_id, primary_id FROM player_aliases")
+        .fetch_all(&pool)
+        .await
+        .unwrap_or_default();
+
+    let mut alias_map: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+    for row in aliases {
+        let alias_id: String = row.get("alias_id");
+        let primary_id: String = row.get("primary_id");
+        alias_map.insert(alias_id, primary_id);
+    }
+
+    // 2. Resolve Requested Team IDs to Primary IDs
+    let team_player_ids: Vec<String> = id.split(',')
+        .map(|s| {
+            let trimmed = s.trim().to_string();
+            alias_map.get(&trimmed).cloned().unwrap_or(trimmed)
+        })
+        .collect();
+    
     let mut team_player_ids_sorted = team_player_ids.clone();
     team_player_ids_sorted.sort();
+    // Deduplicate in case multiple aliases of the same person were requested
+    team_player_ids_sorted.dedup();
 
     let rows = sqlx::query("SELECT id, game_id, map_name, score, round_time, total_duration, played_at, data FROM games ORDER BY played_at DESC")
         .fetch_all(&pool)
@@ -1142,12 +1235,30 @@ async fn get_team_stats(
     let mut team_games: Vec<GameSummary> = Vec::new();
     let mut team_members_info: Vec<PlayerInfo> = Vec::new();
 
+    // Fetch known players for name resolution
+    let mut known_players: std::collections::HashMap<String, String> = sqlx::query("SELECT id, name FROM players")
+        .fetch_all(&pool)
+        .await
+        .unwrap_or_default()
+        .into_iter()
+        .map(|row| (row.get("id"), row.get("name")))
+        .collect();
+
     for row in rows {
         let data_str: Option<String> = row.get("data");
         if let Some(data_str) = data_str {
             if let Ok(payload) = serde_json::from_str::<BullseyePayload>(&data_str) {
                 if let Some(state) = payload.bullseye.as_ref().and_then(|b| b.state.as_ref()) {
                     
+                    // Learn names
+                    if let Some(players) = &state.players {
+                        for p in players {
+                            if let (Some(pid), Some(nick)) = (&p.player_id, &p.nick) {
+                                known_players.insert(pid.clone(), nick.clone());
+                            }
+                        }
+                    }
+
                     // Filter by Map
                     if let Some(map_filter) = &params.map {
                         if let Some(map_name) = &state.map_name {
@@ -1161,19 +1272,42 @@ async fn get_team_stats(
 
                     // Check if this game matches the team
                     if let Some(players) = &state.players {
-                        let mut game_player_ids: Vec<String> = players.iter().map(|p| p.player_id.clone().unwrap_or_default()).collect();
+                        // Resolve game players to Primary IDs
+                        let mut game_player_ids: Vec<String> = players.iter()
+                            .map(|p| {
+                                let pid = p.player_id.clone().unwrap_or_default();
+                                alias_map.get(&pid).cloned().unwrap_or(pid)
+                            })
+                            .collect();
                         game_player_ids.sort();
+                        game_player_ids.dedup();
 
                         if game_player_ids != team_player_ids_sorted {
                             continue;
                         }
 
-                        // Capture member info from the first matching game
+                        // Capture member info from the first matching game (using resolved names/IDs if possible, but keeping original structure)
+                        // Actually, we should probably show the Primary ID info if possible, or just the names from the game.
+                        // Let's stick to names from the game for now, but maybe we should resolve them to the primary name?
+                        // For now, just use the game's info.
                         if team_members_info.is_empty() {
                             team_members_info = players.iter().map(|p| {
+                                let pid = p.player_id.clone().unwrap_or_default();
+                                // Try to get the name of the PRIMARY ID if it's an alias
+                                let primary_id = alias_map.get(&pid).cloned().unwrap_or(pid.clone());
+                                
+                                // Name resolution: 
+                                // 1. Try known_players[primary_id] (Best: Primary Name)
+                                // 2. Try known_players[pid] (Fallback: Alias Name)
+                                // 3. Try p.nick (Game Name)
+                                let name = known_players.get(&primary_id).cloned()
+                                    .or_else(|| known_players.get(&pid).cloned())
+                                    .or_else(|| p.nick.clone())
+                                    .unwrap_or_else(|| "Unknown".to_string());
+
                                 PlayerInfo {
-                                    id: p.player_id.clone().unwrap_or_default(),
-                                    name: p.nick.clone().or_else(|| p.player_id.clone()).unwrap_or_else(|| "Unknown".to_string())
+                                    id: primary_id, // Use Primary ID
+                                    name
                                 }
                             }).collect();
                         }
@@ -1288,6 +1422,7 @@ async fn get_team_stats(
     let team_name = team_members_info.iter().map(|p| p.name.clone()).collect::<Vec<_>>().join(", ");
 
     Json(TeamStatsDetailed {
+        team_id: id,
         team_name,
         members: team_members_info,
         total_games,
@@ -1298,4 +1433,203 @@ async fn get_team_stats(
         score_history,
         games: team_games,
     })
+}
+
+// --- Admin Handlers ---
+
+#[derive(Deserialize, ToSchema)]
+struct PlayerLinkRequest {
+    alias_id: String,
+    primary_id: String,
+}
+
+#[derive(Deserialize, ToSchema)]
+struct PlayerUnlinkRequest {
+    alias_id: String,
+}
+
+#[derive(Serialize, ToSchema)]
+struct AdminPlayerInfo {
+    id: String,
+    name: String,
+    primary_id: Option<String>,
+    aliases: Vec<String>,
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/admin/players",
+    responses(
+        (status = 200, description = "List all players with alias info", body = Vec<AdminPlayerInfo>)
+    )
+)]
+async fn get_admin_players(State(pool): State<AnyPool>) -> Json<Vec<AdminPlayerInfo>> {
+    // 0. Backfill players from games table (if missing)
+    let game_rows = sqlx::query("SELECT data FROM games")
+        .fetch_all(&pool)
+        .await
+        .unwrap_or_default();
+
+    println!("Debug: Backfill - Fetched {} games", game_rows.len());
+
+    let mut found_players: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+
+    for row in game_rows {
+        let data_str: Option<String> = row.get("data");
+        if let Some(data_str) = data_str {
+            if let Ok(payload) = serde_json::from_str::<BullseyePayload>(&data_str) {
+                if let Some(state) = payload.bullseye.as_ref().and_then(|b| b.state.as_ref()) {
+                    if let Some(players) = &state.players {
+                        for p in players {
+                            if let (Some(pid), Some(nick)) = (&p.player_id, &p.nick) {
+                                found_players.insert(pid.clone(), nick.clone());
+                            }
+                        }
+                    }
+                }
+            } else {
+                println!("Debug: Failed to parse game payload");
+            }
+        }
+    }
+
+    println!("Debug: Backfill - Found {} unique players", found_players.len());
+
+    // Upsert found players into DB
+    for (id, name) in found_players {
+        let res = sqlx::query(
+            "INSERT INTO players (id, name, last_seen) VALUES ($1, $2, CURRENT_TIMESTAMP) 
+             ON CONFLICT(id) DO UPDATE SET name = excluded.name"
+        )
+        .bind(&id)
+        .bind(&name)
+        .execute(&pool)
+        .await;
+        
+        if let Err(e) = res {
+            println!("Debug: Failed to upsert player {}: {:?}", id, e);
+        }
+    }
+
+    // 1. Get all players
+    let players = sqlx::query("SELECT id, name FROM players")
+        .fetch_all(&pool)
+        .await
+        .unwrap_or_default();
+
+    println!("Debug: Final fetch - Got {} players", players.len());
+
+    // 2. Get all aliases
+    let aliases = sqlx::query("SELECT alias_id, primary_id FROM player_aliases")
+        .fetch_all(&pool)
+        .await
+        .unwrap_or_default();
+
+    // Build lookup maps
+    let mut alias_map: std::collections::HashMap<String, String> = std::collections::HashMap::new(); // alias -> primary
+    let mut reverse_alias_map: std::collections::HashMap<String, Vec<String>> = std::collections::HashMap::new(); // primary -> [aliases]
+
+    for row in aliases {
+        let alias_id: String = row.get("alias_id");
+        let primary_id: String = row.get("primary_id");
+        alias_map.insert(alias_id.clone(), primary_id.clone());
+        reverse_alias_map.entry(primary_id).or_default().push(alias_id);
+    }
+
+    let mut result = Vec::new();
+    for row in players {
+        let id: String = row.get("id");
+        let name: String = row.get("name");
+        
+        let primary_id = alias_map.get(&id).cloned();
+        let aliases = reverse_alias_map.get(&id).cloned().unwrap_or_default();
+
+        result.push(AdminPlayerInfo {
+            id,
+            name,
+            primary_id,
+            aliases,
+        });
+    }
+
+    Json(result)
+}
+
+#[utoipa::path(
+    post,
+    path = "/api/admin/link",
+    request_body = PlayerLinkRequest,
+    responses(
+        (status = 200, description = "Player linked successfully"),
+        (status = 400, description = "Invalid request (circular link, etc.)")
+    )
+)]
+async fn link_player(
+    State(pool): State<AnyPool>,
+    Json(payload): Json<PlayerLinkRequest>,
+) -> StatusCode {
+    if payload.alias_id == payload.primary_id {
+        return StatusCode::BAD_REQUEST;
+    }
+
+    // Prevent circular dependency: Check if primary_id is already an alias of alias_id (or anyone else)
+    // For simplicity, just ensure primary_id is NOT an alias itself. 
+    // A more robust check would traverse the tree, but 1-level depth is easier to manage.
+    // Rule: A Primary ID cannot be an Alias. An Alias cannot have Aliases.
+    
+    // Check if primary is already an alias
+    let primary_is_alias = sqlx::query("SELECT 1 FROM player_aliases WHERE alias_id = $1")
+        .bind(&payload.primary_id)
+        .fetch_optional(&pool)
+        .await
+        .unwrap_or(None)
+        .is_some();
+
+    if primary_is_alias {
+        return StatusCode::BAD_REQUEST; // Target is already an alias
+    }
+
+    // Check if alias already has aliases (cannot make a parent a child)
+    let alias_has_children = sqlx::query("SELECT 1 FROM player_aliases WHERE primary_id = $1")
+        .bind(&payload.alias_id)
+        .fetch_optional(&pool)
+        .await
+        .unwrap_or(None)
+        .is_some();
+
+    if alias_has_children {
+        return StatusCode::BAD_REQUEST; // Source already has children
+    }
+
+    // Upsert the link
+    let _ = sqlx::query(
+        "INSERT INTO player_aliases (alias_id, primary_id) VALUES ($1, $2) 
+         ON CONFLICT(alias_id) DO UPDATE SET primary_id = excluded.primary_id"
+    )
+    .bind(&payload.alias_id)
+    .bind(&payload.primary_id)
+    .execute(&pool)
+    .await;
+
+    StatusCode::OK
+}
+
+#[utoipa::path(
+    post,
+    path = "/api/admin/unlink",
+    request_body = PlayerUnlinkRequest,
+    responses(
+        (status = 200, description = "Player unlinked successfully")
+    )
+)]
+async fn unlink_player(
+    State(pool): State<AnyPool>,
+    Json(payload): Json<PlayerUnlinkRequest>,
+) -> StatusCode {
+    let _ = sqlx::query("DELETE FROM player_aliases WHERE alias_id = $1")
+        .bind(&payload.alias_id)
+        .execute(&pool)
+        .await;
+
+    StatusCode::OK
 }

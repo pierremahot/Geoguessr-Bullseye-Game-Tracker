@@ -1,7 +1,4 @@
-<script setup>
-import { RouterLink, RouterView } from 'vue-router';
-import { Home, Trophy, Activity } from 'lucide-vue-next';
-</script>
+import { Home, Trophy, Settings } from 'lucide-vue-next';
 
 <template>
   <div class="min-h-screen bg-gray-900 text-gray-100 font-sans selection:bg-purple-500 selection:text-white">
@@ -17,14 +14,15 @@ import { Home, Trophy, Activity } from 'lucide-vue-next';
             </div>
             <div class="hidden md:block">
               <div class="ml-10 flex items-baseline space-x-4">
-                <RouterLink to="/" active-class="bg-gray-800 text-white" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2 transition-colors">
-                  <Home class="w-4 h-4" />
-                  Dashboard
-                </RouterLink>
-                <RouterLink to="/leaderboard" active-class="bg-gray-800 text-white" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2 transition-colors">
-                  <Trophy class="w-4 h-4" />
-                  Leaderboard
-                </RouterLink>
+            <router-link to="/" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2">
+              <Home class="w-4 h-4" /> Dashboard
+            </router-link>
+            <router-link to="/leaderboard" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2">
+              <Trophy class="w-4 h-4" /> Leaderboard
+            </router-link>
+            <router-link to="/admin" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2">
+              <Settings class="w-4 h-4" /> Admin
+            </router-link>
               </div>
             </div>
           </div>
