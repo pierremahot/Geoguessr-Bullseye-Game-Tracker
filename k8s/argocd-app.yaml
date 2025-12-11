@@ -14,7 +14,7 @@ spec:
     # If using OCI registry instead of git for the chart:
     repoURL: registry-1.docker.io/wakalou
     chart: bullseye
-    targetRevision: 0.1.4
+    targetRevision: 0.1.5
   destination:
     server: https://kubernetes.default.svc
     namespace: bullseye
