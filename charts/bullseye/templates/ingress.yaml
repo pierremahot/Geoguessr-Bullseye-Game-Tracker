@@ -2,10 +2,13 @@
 {{- $fullName := include "bullseye.fullname" . -}}
 {{- $svcPortBackend := .Values.backend.service.port -}}
 {{- $svcPortFrontend := .Values.frontend.service.port -}}
+{{- $basicAuthEnabled := .Values.ingress.basicAuth.enabled -}}
+
+{{/* 1. PUBLIC INGRESS (Use separate ingress if Auth is enabled, otherwise use this for everything) */}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ $fullName }}
+  name: {{ $fullName }}{{ if $basicAuthEnabled }}-public{{ end }}
   labels:
     {{- include "bullseye.labels" . | nindent 4 }}
   {{- with .Values.ingress.annotations }}
@@ -31,7 +34,17 @@ spec:
     - host: {{ .host | quote }}
       http:
         paths:
-          # Route /api requests to backend
+          {{- if $basicAuthEnabled }}
+          # ONLY the public route
+          - path: /api/submit-game
+            pathType: Exact
+            backend:
+              service:
+                name: {{ $fullName }}-backend
+                port:
+                  number: {{ $svcPortBackend }}
+          {{- else }}
+          # Original behavior (Everything)
           - path: /api
             pathType: Prefix
             backend:
@@ -39,7 +52,6 @@ spec:
                 name: {{ $fullName }}-backend
                 port:
                   number: {{ $svcPortBackend }}
-          # Route everything else to frontend
           - path: {{ (first .paths).path }}
             pathType: {{ (first .paths).pathType }}
             backend:
@@ -47,5 +59,59 @@ spec:
                 name: {{ $fullName }}-frontend
                 port:
                   number: {{ $svcPortFrontend }}
+          {{- end }}
     {{- end }}
+
+{{/* 2. PRIVATE INGRESS (Only if Auth is enabled) */}}
+{{- if $basicAuthEnabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $fullName }}-private
+  labels:
+    {{- include "bullseye.labels" . | nindent 4 }}
+  annotations:
+    {{- with .Values.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    # Middleware format: namespace-name@provider
+    traefik.ingress.kubernetes.io/router.middlewares: {{ .Release.Namespace }}-{{ $fullName }}-basic-auth@kubernetescrd
+spec:
+  {{- if .Values.ingress.className }}
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- end }}
+  {{- if .Values.ingress.tls }}
+  tls:
+    {{- range .Values.ingress.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      secretName: {{ .secretName }}
+    {{- end }}
+  {{- end }}
+  rules:
+    {{- range .Values.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          # Protected API routes
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $fullName }}-backend
+                port:
+                  number: {{ $svcPortBackend }}
+          # Protected Frontend
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $fullName }}-frontend
+                port:
+                  number: {{ $svcPortFrontend }}
+    {{- end }}
+{{- end }}
 {{- end }}

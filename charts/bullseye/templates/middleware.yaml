@@ -1,0 +1,11 @@
+{{- if .Values.ingress.basicAuth.enabled }}
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "bullseye.fullname" . }}-basic-auth
+  labels:
+    {{- include "bullseye.labels" . | nindent 4 }}
+spec:
+  basicAuth:
+    secret: {{ include "bullseye.fullname" . }}-basic-auth
+{{- end }}

@@ -1,0 +1,20 @@
+apiVersion: argocd-image-updater.argoproj.io/v1alpha1
+kind: ImageUpdater
+metadata:
+  name: bullseye-image-updater
+  namespace: argocd
+spec:
+  # The namespace where ArgoCD is installed
+  namespace: argocd
+  commonUpdateSettings:
+    updateStrategy: "latest"
+  applicationRefs:
+    - namePattern: "bullseye-tracker"
+      images:
+        # Backend Configuration
+        - alias: "backend"
+          imageName: "wakalou/bullseye-backend"
+        
+        # Frontend Configuration
+        - alias: "frontend"
+          imageName: "wakalou/bullseye-frontend"

@@ -43,3 +43,9 @@ ingress:
   #  - secretName: chart-example-tls
   #    hosts:
   #      - chart-example.local
+
+  basicAuth:
+    enabled: true
+    # user: admin, password: bullseye (generated via htpasswd -nb admin bullseye)
+    # You SHOULD change this.
+    htpasswd: "admin:$apr1$vLB3gJZo$cUr9geptxXkg2KnOL.kL7."
