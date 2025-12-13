@@ -16,6 +16,9 @@ spec:
   parentRefs:
     - name: {{ $gatewayName }}
       namespace: {{ $gatewayNamespace }}
+    {{- if .Values.gateway.redirectHttpToHttps }}
+      sectionName: {{ .Values.gateway.listeners.websecure }}
+    {{- end }}
   hostnames:
     {{- range .Values.ingress.hosts }}
     - {{ .host | quote }}

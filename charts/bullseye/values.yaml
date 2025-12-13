@@ -35,6 +35,10 @@ networking:
 gateway:
   name: traefik-gateway
   namespace: default # defaults to release namespace if empty
+  listeners:
+    web: web
+    websecure: websecure
+  redirectHttpToHttps: true
 
 ingress:
   # When networking.type is "ingress", this section configures the Ingress resource partially use by the gateway.
