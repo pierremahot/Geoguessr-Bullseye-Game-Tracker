@@ -1,0 +1,22 @@
+{{- if eq .Values.networking.type "gateway" -}}
+{{- $gatewayNamespace := .Values.gateway.namespace | default .Release.Namespace -}}
+{{- /* Only create ReferenceGrant if Gateway is in a different namespace, OR if specific middleware access is needed */}}
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: {{ include "bullseye.fullname" . }}-auth-grant
+  labels:
+    {{- include "bullseye.labels" . | nindent 4 }}
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      namespace: {{ $gatewayNamespace }}
+  to:
+    - group: traefik.io
+      kind: Middleware
+    # Also granting access to Services is good practice if cross-namespace, though usually handled by Route attachment.
+    # Adding it to be safe if backendrefs are cross-ns (which they are not here, but the Gateway is).
+    - group: ""
+      kind: Service
+{{- end }}
