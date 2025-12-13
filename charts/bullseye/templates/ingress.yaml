@@ -1,4 +1,4 @@
-{{- if .Values.ingress.enabled -}}
+{{- if and .Values.ingress.enabled (eq .Values.networking.type "ingress") -}}
 {{- $fullName := include "bullseye.fullname" . -}}
 {{- $svcPortBackend := .Values.backend.service.port -}}
 {{- $svcPortFrontend := .Values.frontend.service.port -}}

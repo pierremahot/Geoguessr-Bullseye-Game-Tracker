@@ -29,8 +29,16 @@ frontend:
     type: ClusterIP
     port: 80
 
+networking:
+  type: gateway # Options: ingress, gateway
+
+gateway:
+  name: traefik-gateway
+  namespace: default # defaults to release namespace if empty
+
 ingress:
-  enabled: true
+  # When networking.type is "ingress", this section configures the Ingress resource partially use by the gateway.
+  enabled: false
   className: "traefik" # Default for k3s
   annotations: {}
     # kubernetes.io/ingress.class: traefik

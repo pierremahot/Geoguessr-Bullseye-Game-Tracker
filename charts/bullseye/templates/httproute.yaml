@@ -1,0 +1,66 @@
+{{- if eq .Values.networking.type "gateway" -}}
+{{- $fullName := include "bullseye.fullname" . -}}
+{{- $svcPortBackend := .Values.backend.service.port -}}
+{{- $svcPortFrontend := .Values.frontend.service.port -}}
+{{- $basicAuthEnabled := .Values.ingress.basicAuth.enabled -}}
+{{- $gatewayName := .Values.gateway.name -}}
+{{- $gatewayNamespace := .Values.gateway.namespace | default .Release.Namespace -}}
+
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ $fullName }}
+  labels:
+    {{- include "bullseye.labels" . | nindent 4 }}
+spec:
+  parentRefs:
+    - name: {{ $gatewayName }}
+      namespace: {{ $gatewayNamespace }}
+  hostnames:
+    {{- range .Values.ingress.hosts }}
+    - {{ .host | quote }}
+    {{- end }}
+  rules:
+    {{- /* 1. Public Route: /api/submit-game (Always accessible without Auth) */}}
+    - matches:
+        - path:
+            type: Exact
+            value: /api/submit-game
+      backendRefs:
+        - name: {{ $fullName }}-backend
+          port: {{ $svcPortBackend }}
+
+    {{- /* 2. API Routes */}}
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api
+      {{- if $basicAuthEnabled }}
+      filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: {{ $fullName }}-basic-auth
+      {{- end }}
+      backendRefs:
+        - name: {{ $fullName }}-backend
+          port: {{ $svcPortBackend }}
+
+    {{- /* 3. Frontend Routes */}}
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      {{- if $basicAuthEnabled }}
+      filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: {{ $fullName }}-basic-auth
+      {{- end }}
+      backendRefs:
+        - name: {{ $fullName }}-frontend
+          port: {{ $svcPortFrontend }}
+{{- end }}
