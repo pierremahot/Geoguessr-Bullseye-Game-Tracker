@@ -3,6 +3,7 @@ name: Extension Build
 on:
   push:
     branches: [ "main" ]
+    tags: [ 'v*' ]
     paths:
       - 'extension/**'
       - '.github/workflows/extension-build.yml'
@@ -15,6 +16,8 @@ on:
 jobs:
   build-extension:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repository
@@ -42,3 +45,9 @@ jobs:
         with:
           name: chrome-extension
           path: extension/extension-build.zip
+
+      - name: Upload to Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: extension/extension-build.zip
