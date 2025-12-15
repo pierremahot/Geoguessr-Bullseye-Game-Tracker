@@ -1,0 +1,44 @@
+name: Extension Build
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'extension/**'
+      - '.github/workflows/extension-build.yml'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'extension/**'
+      - '.github/workflows/extension-build.yml'
+
+jobs:
+  build-extension:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        working-directory: extension
+        run: bun install
+
+      - name: Build extension
+        working-directory: extension
+        run: bun run build
+
+      - name: Zip extension
+        working-directory: extension
+        run: zip -r extension-build.zip dist
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrome-extension
+          path: extension/extension-build.zip
