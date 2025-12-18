@@ -474,6 +474,7 @@ pub struct GameSummary {
     round_count: i64,
     max_score: i64,
     is_finished: bool,
+    game_mode: String,
 }
 
 #[utoipa::path(
@@ -521,8 +522,8 @@ async fn get_games(State(pool): State<AnyPool>) -> Json<Vec<GameSummary>> {
         let mut played_at: String = row.try_get("played_at").unwrap_or_default();
 
         let data_str: Option<String> = row.get("data");
-        if let Some(data_str) = data_str {
-            if let Ok(payload) = serde_json::from_str::<BullseyePayload>(&data_str) {
+        if let Some(ref data_str) = data_str {
+            if let Ok(payload) = serde_json::from_str::<BullseyePayload>(data_str) {
                 if let Some(state) = payload.bullseye.as_ref().and_then(|b| b.state.as_ref()) {
                     // Extract Players
                     if let Some(p_list) = &state.players {
@@ -611,6 +612,35 @@ async fn get_games(State(pool): State<AnyPool>) -> Json<Vec<GameSummary>> {
             country_codes,
             max_score: round_count * 5000,
             is_finished,
+            game_mode: {
+                let mut mode = "Moving".to_string();
+                if let Ok(payload) = data_str
+                    .as_ref()
+                    .map(|s| serde_json::from_str::<BullseyePayload>(s))
+                    .unwrap_or(Err(serde::de::Error::custom("")))
+                {
+                    if let Some(opts) = payload
+                        .bullseye
+                        .as_ref()
+                        .and_then(|b| b.state.as_ref())
+                        .and_then(|s| s.options.as_ref())
+                        .and_then(|o| o.movement_options.as_ref())
+                    {
+                        let forbid_moving = opts.forbid_moving.unwrap_or(false);
+                        let forbid_zooming = opts.forbid_zooming.unwrap_or(false);
+                        let forbid_rotating = opts.forbid_rotating.unwrap_or(false);
+
+                        if forbid_moving {
+                            if forbid_zooming || forbid_rotating {
+                                mode = "NMPZ".to_string();
+                            } else {
+                                mode = "No Move".to_string();
+                            }
+                        }
+                    }
+                }
+                mode
+            },
         });
     }
 
@@ -1242,6 +1272,32 @@ async fn get_player_stats(
                         country_codes,
                         max_score: round_count * 5000,
                         is_finished,
+                        game_mode: {
+                            let mut mode = "Moving".to_string();
+                            if let Ok(payload) = serde_json::from_str::<BullseyePayload>(&data_str)
+                            {
+                                if let Some(opts) = payload
+                                    .bullseye
+                                    .as_ref()
+                                    .and_then(|b| b.state.as_ref())
+                                    .and_then(|s| s.options.as_ref())
+                                    .and_then(|o| o.movement_options.as_ref())
+                                {
+                                    let forbid_moving = opts.forbid_moving.unwrap_or(false);
+                                    let forbid_zooming = opts.forbid_zooming.unwrap_or(false);
+                                    let forbid_rotating = opts.forbid_rotating.unwrap_or(false);
+
+                                    if forbid_moving {
+                                        if forbid_zooming || forbid_rotating {
+                                            mode = "NMPZ".to_string();
+                                        } else {
+                                            mode = "No Move".to_string();
+                                        }
+                                    }
+                                }
+                            }
+                            mode
+                        },
                     });
                 }
             }
@@ -1601,6 +1657,32 @@ async fn get_team_stats(
                         country_codes,
                         max_score: round_count * 5000,
                         is_finished,
+                        game_mode: {
+                            let mut mode = "Moving".to_string();
+                            if let Ok(payload) = serde_json::from_str::<BullseyePayload>(&data_str)
+                            {
+                                if let Some(opts) = payload
+                                    .bullseye
+                                    .as_ref()
+                                    .and_then(|b| b.state.as_ref())
+                                    .and_then(|s| s.options.as_ref())
+                                    .and_then(|o| o.movement_options.as_ref())
+                                {
+                                    let forbid_moving = opts.forbid_moving.unwrap_or(false);
+                                    let forbid_zooming = opts.forbid_zooming.unwrap_or(false);
+                                    let forbid_rotating = opts.forbid_rotating.unwrap_or(false);
+
+                                    if forbid_moving {
+                                        if forbid_zooming || forbid_rotating {
+                                            mode = "NMPZ".to_string();
+                                        } else {
+                                            mode = "No Move".to_string();
+                                        }
+                                    }
+                                }
+                            }
+                            mode
+                        },
                     });
                 }
             }

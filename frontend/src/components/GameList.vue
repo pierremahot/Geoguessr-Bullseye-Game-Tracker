@@ -12,6 +12,9 @@ import {
   Flag,
   Trophy,
   Trash2,
+  Footprints,
+  Ban,
+  Lock,
 } from 'lucide-vue-next';
 
 const games = ref([]);
@@ -229,6 +232,38 @@ const columns = [
       ]),
     cell: (info) =>
       h('span', { class: 'text-gray-300' }, info.getValue() || 'Unknown'),
+  },
+  {
+    accessorKey: 'game_mode',
+    header: 'Mode',
+    cell: (info) => {
+      const mode = info.getValue();
+      let icon = null;
+      let color = 'text-gray-400';
+
+      if (mode === 'Moving') {
+        icon = Footprints;
+        color = 'text-green-400';
+      } else if (mode === 'No Move') {
+        icon = Ban;
+        color = 'text-yellow-400';
+      } else if (mode === 'NMPZ') {
+        icon = Lock;
+        color = 'text-red-400';
+      }
+
+      if (!icon) return h('span', { class: 'text-gray-600' }, '-');
+
+      return h(
+        'div',
+        { class: `flex items-center gap-2 ${color}`, title: mode },
+        [
+          h(icon, { class: 'w-4 h-4' }),
+          h('span', { class: 'text-xs font-medium' }, mode),
+        ]
+      );
+    },
+    meta: { filterVariant: 'select' },
   },
   {
     accessorKey: 'score',
