@@ -3,9 +3,7 @@
   "name": "Geoguessr Bullseye Game Tracker",
   "version": "1.6",
   "description": "Records scores, players, and dates for your bullseye games.",
-  "permissions": [
-    "storage"
-  ],
+  "permissions": ["storage"],
   "action": {
     "default_popup": "pages/popup.html",
     "default_icon": {
@@ -25,22 +23,14 @@
   },
   "content_scripts": [
     {
-      "matches": [
-        "https://www.geoguessr.com/*"
-      ],
-      "js": [
-        "scripts/inject.js"
-      ],
+      "matches": ["https://www.geoguessr.com/*"],
+      "js": ["scripts/inject.js"],
       "run_at": "document_start",
       "world": "MAIN"
     },
     {
-      "matches": [
-        "https://www.geoguessr.com/*"
-      ],
-      "js": [
-        "scripts/content.js"
-      ],
+      "matches": ["https://www.geoguessr.com/*"],
+      "js": ["scripts/content.js"],
       "run_at": "document_start"
     }
   ],

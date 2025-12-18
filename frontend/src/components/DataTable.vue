@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, h } from 'vue'
+import { ref, computed, h } from 'vue';
 import {
   useVueTable,
   getCoreRowModel,
@@ -7,8 +7,14 @@ import {
   getSortedRowModel,
   getPaginationRowModel,
   FlexRender,
-} from '@tanstack/vue-table'
-import { ArrowUpDown, ChevronLeft, ChevronRight, Search, Filter } from 'lucide-vue-next'
+} from '@tanstack/vue-table';
+import {
+  ArrowUpDown,
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  Filter,
+} from 'lucide-vue-next';
 
 const props = defineProps({
   data: {
@@ -19,70 +25,85 @@ const props = defineProps({
     type: Array,
     required: true,
   },
-})
+});
 
-const sorting = ref([])
-const columnFilters = ref([])
+const sorting = ref([]);
+const columnFilters = ref([]);
 
 const table = useVueTable({
   get data() {
-    return props.data
+    return props.data;
   },
   columns: props.columns,
   state: {
     get sorting() {
-      return sorting.value
+      return sorting.value;
     },
     get columnFilters() {
-      return columnFilters.value
+      return columnFilters.value;
     },
   },
-  onSortingChange: updaterOrValue => {
-    sorting.value = typeof updaterOrValue === 'function' ? updaterOrValue(sorting.value) : updaterOrValue
+  onSortingChange: (updaterOrValue) => {
+    sorting.value =
+      typeof updaterOrValue === 'function'
+        ? updaterOrValue(sorting.value)
+        : updaterOrValue;
   },
-  onColumnFiltersChange: updaterOrValue => {
-    columnFilters.value = typeof updaterOrValue === 'function' ? updaterOrValue(columnFilters.value) : updaterOrValue
+  onColumnFiltersChange: (updaterOrValue) => {
+    columnFilters.value =
+      typeof updaterOrValue === 'function'
+        ? updaterOrValue(columnFilters.value)
+        : updaterOrValue;
   },
   getCoreRowModel: getCoreRowModel(),
   getFilteredRowModel: getFilteredRowModel(),
   getSortedRowModel: getSortedRowModel(),
   getPaginationRowModel: getPaginationRowModel(),
-})
+});
 
 // Filter Components
 const FilterInput = ({ column }) => {
-  const columnFilterValue = column.getFilterValue()
-  const { filterVariant } = column.columnDef.meta ?? {}
+  const columnFilterValue = column.getFilterValue();
+  const { filterVariant } = column.columnDef.meta ?? {};
 
   if (filterVariant === 'range') {
     return h('div', { class: 'flex space-x-2' }, [
       h('input', {
         type: 'number',
         value: columnFilterValue?.[0] ?? '',
-        onChange: e => column.setFilterValue((old) => [e.target.value, old?.[1]]),
+        onChange: (e) =>
+          column.setFilterValue((old) => [e.target.value, old?.[1]]),
         placeholder: 'Min',
-        class: 'w-20 px-2 py-1 text-xs bg-gray-700/50 border border-gray-600 rounded text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500',
+        class:
+          'w-20 px-2 py-1 text-xs bg-gray-700/50 border border-gray-600 rounded text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500',
       }),
       h('input', {
         type: 'number',
         value: columnFilterValue?.[1] ?? '',
-        onChange: e => column.setFilterValue((old) => [old?.[0], e.target.value]),
+        onChange: (e) =>
+          column.setFilterValue((old) => [old?.[0], e.target.value]),
         placeholder: 'Max',
-        class: 'w-20 px-2 py-1 text-xs bg-gray-700/50 border border-gray-600 rounded text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500',
+        class:
+          'w-20 px-2 py-1 text-xs bg-gray-700/50 border border-gray-600 rounded text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500',
       }),
-    ])
+    ]);
   }
 
   if (filterVariant === 'select') {
-    return h('select', {
-      onChange: e => column.setFilterValue(e.target.value),
-      value: columnFilterValue?.toString() ?? '',
-      class: 'w-full px-2 py-1 text-xs bg-gray-700/50 border border-gray-600 rounded text-gray-200 focus:outline-none focus:border-blue-500',
-    }, [
-      h('option', { value: '' }, 'All'),
-      h('option', { value: 'true' }, 'Finished'),
-      h('option', { value: 'false' }, 'Ongoing'),
-    ])
+    return h(
+      'select',
+      {
+        onChange: (e) => column.setFilterValue(e.target.value),
+        value: columnFilterValue?.toString() ?? '',
+        class:
+          'w-full px-2 py-1 text-xs bg-gray-700/50 border border-gray-600 rounded text-gray-200 focus:outline-none focus:border-blue-500',
+      },
+      [
+        h('option', { value: '' }, 'All'),
+        h('option', { value: 'true' }, 'Finished'),
+        h('option', { value: 'false' }, 'Ongoing'),
+      ]
+    );
   }
 
   return h('div', { class: 'relative' }, [
@@ -90,26 +111,34 @@ const FilterInput = ({ column }) => {
     h('input', {
       type: 'text',
       value: columnFilterValue ?? '',
-      onInput: e => column.setFilterValue(e.target.value),
+      onInput: (e) => column.setFilterValue(e.target.value),
       placeholder: `Filter...`,
-      class: 'w-full pl-7 pr-2 py-1 text-xs bg-gray-700/50 border border-gray-600 rounded text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500',
+      class:
+        'w-full pl-7 pr-2 py-1 text-xs bg-gray-700/50 border border-gray-600 rounded text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500',
     }),
-  ])
-}
-
+  ]);
+};
 </script>
 
 <template>
   <div class="flex flex-col h-full w-full">
     <div class="flex-grow overflow-auto custom-scrollbar w-full">
       <table class="min-w-full text-left text-sm text-gray-300">
-        <thead class="bg-gray-900/80 text-gray-100 uppercase font-medium tracking-wider sticky top-0 z-10 backdrop-blur-md">
-          <tr v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id">
+        <thead
+          class="bg-gray-900/80 text-gray-100 uppercase font-medium tracking-wider sticky top-0 z-10 backdrop-blur-md"
+        >
+          <tr
+            v-for="headerGroup in table.getHeaderGroups()"
+            :key="headerGroup.id"
+          >
             <th
               v-for="header in headerGroup.headers"
               :key="header.id"
               class="px-6 py-4 whitespace-nowrap border-b border-gray-700/50 bg-gray-900/90"
-              :class="{'cursor-pointer hover:bg-gray-800/50': header.column.getCanSort()}"
+              :class="{
+                'cursor-pointer hover:bg-gray-800/50':
+                  header.column.getCanSort(),
+              }"
               @click="header.column.getToggleSortingHandler()?.($event)"
             >
               <div class="flex flex-col gap-2">
@@ -119,10 +148,13 @@ const FilterInput = ({ column }) => {
                     :render="header.column.columnDef.header"
                     :props="header.getContext()"
                   />
-                  <ArrowUpDown v-if="header.column.getCanSort()" class="w-3 h-3 text-gray-500" />
+                  <ArrowUpDown
+                    v-if="header.column.getCanSort()"
+                    class="w-3 h-3 text-gray-500"
+                  />
                 </div>
                 <div v-if="header.column.getCanFilter()" @click.stop>
-                   <FilterInput :column="header.column" />
+                  <FilterInput :column="header.column" />
                 </div>
               </div>
             </th>
@@ -150,10 +182,17 @@ const FilterInput = ({ column }) => {
     </div>
 
     <!-- Pagination -->
-    <div class="flex items-center justify-between px-6 py-3 border-t border-gray-700 bg-gray-800/50 backdrop-blur-sm">
+    <div
+      class="flex items-center justify-between px-6 py-3 border-t border-gray-700 bg-gray-800/50 backdrop-blur-sm"
+    >
       <div class="flex items-center gap-2">
         <span class="text-sm text-gray-400">
-          Page <span class="font-medium text-white">{{ table.getState().pagination.pageIndex + 1 }}</span> of <span class="font-medium text-white">{{ table.getPageCount() }}</span>
+          Page
+          <span class="font-medium text-white">{{
+            table.getState().pagination.pageIndex + 1
+          }}</span>
+          of
+          <span class="font-medium text-white">{{ table.getPageCount() }}</span>
         </span>
       </div>
       <div class="flex gap-2">

@@ -11,7 +11,9 @@ const excludeAbandons = ref(true); // Default to true
 const loadLeaderboard = async () => {
   loading.value = true;
   try {
-    teams.value = await fetchTeamLeaderboard({ exclude_abandons: excludeAbandons.value });
+    teams.value = await fetchTeamLeaderboard({
+      exclude_abandons: excludeAbandons.value,
+    });
   } catch (err) {
     error.value = err.message;
   } finally {
@@ -38,22 +40,42 @@ function formatDuration(seconds) {
         <Trophy class="w-8 h-8 text-yellow-400" />
         Team Leaderboard
       </h2>
-      
-      <div class="flex items-center gap-4 bg-gray-800/50 p-2 rounded-lg border border-gray-700">
-        <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer select-none">
-          <input type="checkbox" v-model="excludeAbandons" class="rounded bg-gray-700 border-gray-600 text-purple-500 focus:ring-purple-500/50">
+
+      <div
+        class="flex items-center gap-4 bg-gray-800/50 p-2 rounded-lg border border-gray-700"
+      >
+        <label
+          class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer select-none"
+        >
+          <input
+            type="checkbox"
+            v-model="excludeAbandons"
+            class="rounded bg-gray-700 border-gray-600 text-purple-500 focus:ring-purple-500/50"
+          />
           Exclude Abandons
         </label>
       </div>
     </header>
 
-    <div v-if="loading" class="text-gray-400 animate-pulse">Loading leaderboard...</div>
-    <div v-else-if="error" class="text-red-500 bg-red-900/20 p-4 rounded-lg border border-red-900">Error: {{ error }}</div>
-    
-    <div v-else class="bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700 overflow-hidden shadow-xl">
+    <div v-if="loading" class="text-gray-400 animate-pulse">
+      Loading leaderboard...
+    </div>
+    <div
+      v-else-if="error"
+      class="text-red-500 bg-red-900/20 p-4 rounded-lg border border-red-900"
+    >
+      Error: {{ error }}
+    </div>
+
+    <div
+      v-else
+      class="bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700 overflow-hidden shadow-xl"
+    >
       <div class="overflow-x-auto">
         <table class="w-full text-left text-sm text-gray-300">
-          <thead class="bg-gray-900/50 text-gray-100 uppercase font-medium tracking-wider">
+          <thead
+            class="bg-gray-900/50 text-gray-100 uppercase font-medium tracking-wider"
+          >
             <tr>
               <th class="px-6 py-4 w-16 text-center">Rank</th>
               <th class="px-6 py-4">Team Members</th>
@@ -63,8 +85,11 @@ function formatDuration(seconds) {
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-700/50">
-            <tr v-for="(team, index) in teams" :key="team.team_name" 
-                class="hover:bg-gray-700/30 transition-colors group cursor-pointer">
+            <tr
+              v-for="(team, index) in teams"
+              :key="team.team_name"
+              class="hover:bg-gray-700/30 transition-colors group cursor-pointer"
+            >
               <td class="px-6 py-4 text-center font-bold text-lg">
                 <span v-if="index === 0" class="text-yellow-400">1</span>
                 <span v-else-if="index === 1" class="text-gray-300">2</span>
@@ -73,14 +98,20 @@ function formatDuration(seconds) {
               </td>
               <td class="px-6 py-4">
                 <div class="flex items-center gap-3">
-                  <RouterLink :to="`/team/${team.members.map(m => m.id).join(',')}`" class="p-2 bg-gray-700 rounded-full hover:bg-gray-600 transition-colors cursor-pointer">
+                  <RouterLink
+                    :to="`/team/${team.members.map((m) => m.id).join(',')}`"
+                    class="p-2 bg-gray-700 rounded-full hover:bg-gray-600 transition-colors cursor-pointer"
+                  >
                     <Users class="w-5 h-5 text-blue-400" />
                   </RouterLink>
                   <div>
                     <div class="flex flex-wrap gap-2">
-                      <RouterLink v-for="(member, i) in team.members" :key="i" 
-                            :to="`/player/${member.id}`"
-                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200 shadow-sm hover:bg-red-200 transition-colors">
+                      <RouterLink
+                        v-for="(member, i) in team.members"
+                        :key="i"
+                        :to="`/player/${member.id}`"
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200 shadow-sm hover:bg-red-200 transition-colors"
+                      >
                         {{ member.name }}
                       </RouterLink>
                     </div>
@@ -88,12 +119,16 @@ function formatDuration(seconds) {
                 </div>
               </td>
               <td class="px-6 py-4 text-center">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-700 text-gray-300">
+                <span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-700 text-gray-300"
+                >
                   {{ team.games_played }}
                 </span>
               </td>
               <td class="px-6 py-4 text-right">
-                <div class="font-bold text-lg text-green-400">{{ Math.round(team.average_score).toLocaleString() }}</div>
+                <div class="font-bold text-lg text-green-400">
+                  {{ Math.round(team.average_score).toLocaleString() }}
+                </div>
                 <div class="text-xs text-gray-500">pts</div>
               </td>
               <td class="px-6 py-4 text-right">
@@ -106,7 +141,7 @@ function formatDuration(seconds) {
           </tbody>
         </table>
       </div>
-      
+
       <div v-if="teams.length === 0" class="p-12 text-center text-gray-500">
         No games recorded yet. Play some games to see the leaderboard!
       </div>

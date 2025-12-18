@@ -8,9 +8,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/pierremahot/Geoguessr-Bullseye-Game-Tracker.git
-    targetRevision: HEAD
-    path: charts/bullseye
+    # repoURL: https://github.com/pierremahot/Geoguessr-Bullseye-Game-Tracker.git
+    # targetRevision: HEAD
+    # path: charts/bullseye
     # If using OCI registry instead of git for the chart:
     repoURL: registry-1.docker.io/wakalou
     chart: bullseye

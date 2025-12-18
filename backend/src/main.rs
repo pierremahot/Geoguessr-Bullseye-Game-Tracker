@@ -1,19 +1,19 @@
 use axum::{
-    extract::{State, Json, Path, Query},
-    http::{StatusCode, Method, HeaderMap},
-    routing::{get, post, delete},
+    extract::{Json, Path, Query, State},
+    http::{HeaderMap, Method, StatusCode},
+    routing::{delete, get, post},
     Router,
 };
 use serde::{Deserialize, Serialize};
-use sqlx::{AnyPool, any::AnyPoolOptions};
 use sqlx::migrate::MigrateDatabase;
-use std::net::SocketAddr;
-use tower_http::cors::{Any, CorsLayer};
-use tracing_subscriber;
-use utoipa::{OpenApi, ToSchema, IntoParams};
-use utoipa_swagger_ui::SwaggerUi;
-use utoipa::openapi::security::{SecurityScheme, HttpAuthScheme, Http};
 use sqlx::Row;
+use sqlx::{any::AnyPoolOptions, AnyPool};
+// use std::net::SocketAddr; // Unused
+use tower_http::cors::{Any, CorsLayer};
+// use tracing_subscriber; // Redundant
+use utoipa::openapi::security::{Http, HttpAuthScheme, SecurityScheme};
+use utoipa::{IntoParams, OpenApi, ToSchema};
+use utoipa_swagger_ui::SwaggerUi;
 
 #[derive(OpenApi)]
 #[openapi(
@@ -28,8 +28,7 @@ use sqlx::Row;
     ),
     components(
         schemas(
-            BullseyePayload, BullseyeData, BullseyeState, GameOptions, MovementOptions, 
-            Round, Panorama, Player, Guess, Score, BoundingBox, LatLng,
+            BullseyePayload, BullseyeData, BullseyeState, GameOptions, MovementOptions,            Round, Panorama, Player, Guess, Score, BoundingBox, LatLng,
             GameSummary, GameStats, CountryStat, TeamStats, PlayerStatsDetailed, TeamStatSimple, ScorePoint, TeamStatsDetailed
         )
     ),
@@ -47,9 +46,7 @@ impl utoipa::Modify for SecurityAddon {
         if let Some(components) = openapi.components.as_mut() {
             components.add_security_scheme(
                 "api_key",
-                SecurityScheme::Http(
-                    Http::new(HttpAuthScheme::Bearer)
-                ),
+                SecurityScheme::Http(Http::new(HttpAuthScheme::Bearer)),
             )
         }
     }
@@ -66,17 +63,20 @@ async fn main() {
     // Load .env
     dotenv::dotenv().ok();
 
-    let database_url = std::env::var("DATABASE_URL").unwrap_or_else(|_| "sqlite://bullseye.db?mode=rwc".to_string());
+    let database_url = std::env::var("DATABASE_URL")
+        .unwrap_or_else(|_| "sqlite://bullseye.db?mode=rwc".to_string());
 
     println!("Using database: {}", database_url);
 
     // Create DB pool using AnyPool to support both Postgres and SQLite
     // For SQLite, we might need to create the DB file first if it doesn't exist
-    if database_url.starts_with("sqlite://") {
-        if !sqlx::Sqlite::database_exists(&database_url).await.unwrap_or(false) {
-            println!("Creating database {}", database_url);
-            sqlx::Sqlite::create_database(&database_url).await.unwrap();
-        }
+    if database_url.starts_with("sqlite://")
+        && !sqlx::Sqlite::database_exists(&database_url)
+            .await
+            .unwrap_or(false)
+    {
+        println!("Creating database {}", database_url);
+        sqlx::Sqlite::create_database(&database_url).await.unwrap();
     }
 
     let pool = AnyPoolOptions::new()
@@ -92,7 +92,7 @@ async fn main() {
         .await
         .expect("Failed to run migrations");
     println!("Migrations run successfully");
-    
+
     // Simple table creation for SQLite if migration fails or just to ensure it exists
     // This is a quick hack for the dual support without complex migration logic
     let create_table_query = r#"
@@ -107,7 +107,7 @@ async fn main() {
         data TEXT
     );
     "#;
-    
+
     // Adjust for SQLite (AUTOINCREMENT instead of SERIAL)
     let query = if database_url.starts_with("sqlite://") {
         create_table_query.replace("SERIAL PRIMARY KEY", "INTEGER PRIMARY KEY AUTOINCREMENT")
@@ -134,9 +134,9 @@ async fn main() {
         .route("/api/players/:id/stats", get(get_player_stats))
         .route("/api/teams/:id/stats", get(get_team_stats))
         .route("/api/games/:id", delete(delete_game))
-    .route("/api/admin/players", get(get_admin_players))
-    .route("/api/admin/link", post(link_player))
-    .route("/api/admin/unlink", post(unlink_player))
+        .route("/api/admin/players", get(get_admin_players))
+        .route("/api/admin/link", post(link_player))
+        .route("/api/admin/unlink", post(unlink_player))
         .layer(cors)
         .with_state(pool);
 
@@ -159,8 +159,6 @@ async fn health_check() -> &'static str {
 }
 
 // ... (struct definitions omitted for brevity, they are unchanged)
-
-
 
 #[derive(Deserialize, Serialize, Debug, ToSchema)]
 struct BullseyePayload {
@@ -330,11 +328,10 @@ async fn submit_game(
 ) -> Result<StatusCode, StatusCode> {
     // Check API Key
     if let Ok(env_api_key) = std::env::var("API_KEY") {
-        let auth_header = headers.get("Authorization")
-            .and_then(|h| h.to_str().ok());
-        
+        let auth_header = headers.get("Authorization").and_then(|h| h.to_str().ok());
+
         let expected_token = format!("Bearer {}", env_api_key);
-        
+
         if auth_header != Some(&expected_token) {
             println!("Unauthorized access attempt");
             return Err(StatusCode::UNAUTHORIZED);
@@ -346,14 +343,22 @@ async fn submit_game(
     let data_json = serde_json::to_string(&payload).unwrap();
 
     // Extract fields safely
-    let game_id = payload.game_id.as_deref()
-        .or_else(|| payload.bullseye.as_ref().and_then(|b| b.state.as_ref().and_then(|s| s.game_id.as_deref())));
-    
-    let map_name = payload.bullseye.as_ref()
+    let game_id = payload.game_id.as_deref().or_else(|| {
+        payload
+            .bullseye
+            .as_ref()
+            .and_then(|b| b.state.as_ref().and_then(|s| s.game_id.as_deref()))
+    });
+
+    let map_name = payload
+        .bullseye
+        .as_ref()
         .and_then(|b| b.state.as_ref())
         .and_then(|s| s.map_name.as_deref());
 
-    let mut score = payload.bullseye.as_ref()
+    let mut score = payload
+        .bullseye
+        .as_ref()
         .and_then(|b| b.guess.as_ref())
         .and_then(|g| g.score.as_ref())
         .and_then(|s| s.points)
@@ -361,14 +366,17 @@ async fn submit_game(
 
     // If score is 0, try to calculate it from rounds in state
     if score == 0 {
-        if let Some(rounds) = payload.bullseye.as_ref()
+        if let Some(rounds) = payload
+            .bullseye
+            .as_ref()
             .and_then(|b| b.state.as_ref())
-            .and_then(|s| s.rounds.as_ref()) 
+            .and_then(|s| s.rounds.as_ref())
         {
-            let calculated_score: i32 = rounds.iter()
+            let calculated_score: i32 = rounds
+                .iter()
                 .filter_map(|r| r.score.as_ref().and_then(|s| s.points))
                 .sum();
-            
+
             if calculated_score > 0 {
                 println!("Calculated score from rounds: {}", calculated_score);
                 score = calculated_score;
@@ -376,7 +384,9 @@ async fn submit_game(
         }
     }
 
-    let round_time = payload.bullseye.as_ref()
+    let round_time = payload
+        .bullseye
+        .as_ref()
         .and_then(|b| b.state.as_ref())
         .and_then(|s| s.options.as_ref())
         .and_then(|o| o.round_time);
@@ -386,16 +396,18 @@ async fn submit_game(
     let mut played_at = payload.timestamp.clone();
 
     if played_at.is_none() {
-        if let Some(rounds) = payload.bullseye.as_ref()
+        if let Some(rounds) = payload
+            .bullseye
+            .as_ref()
             .and_then(|b| b.state.as_ref())
-            .and_then(|s| s.rounds.as_ref()) 
+            .and_then(|s| s.rounds.as_ref())
         {
             // Try to find round 1
             if let Some(first_round) = rounds.iter().find(|r| r.round_number == Some(1)) {
-                 played_at = first_round.start_time.clone();
+                played_at = first_round.start_time.clone();
             } else if let Some(first) = rounds.first() {
-                 // Fallback to first available round if round 1 not found
-                 played_at = first.start_time.clone();
+                // Fallback to first available round if round 1 not found
+                played_at = first.start_time.clone();
             }
         }
     }
@@ -419,11 +431,16 @@ async fn submit_game(
     })?;
 
     // Upsert Players
-    if let Some(players) = payload.bullseye.as_ref().and_then(|b| b.state.as_ref()).and_then(|s| s.players.as_ref()) {
+    if let Some(players) = payload
+        .bullseye
+        .as_ref()
+        .and_then(|b| b.state.as_ref())
+        .and_then(|s| s.players.as_ref())
+    {
         for player in players {
             if let (Some(id), Some(nick)) = (&player.player_id, &player.nick) {
                 let _ = sqlx::query(
-                    "INSERT INTO players (id, name, last_seen) VALUES ($1, $2, CURRENT_TIMESTAMP) 
+                    "INSERT INTO players (id, name, last_seen) VALUES ($1, $2, CURRENT_TIMESTAMP)
                      ON CONFLICT(id) DO UPDATE SET name = excluded.name, last_seen = CURRENT_TIMESTAMP"
                 )
                 .bind(id)
@@ -477,7 +494,7 @@ async fn get_games(State(pool): State<AnyPool>) -> Json<Vec<GameSummary>> {
         Ok(r) => {
             println!("Fetched {} games from DB", r.len());
             r
-        },
+        }
         Err(e) => {
             eprintln!("Failed to fetch games: {}", e);
             return Json(Vec::new());
@@ -485,13 +502,14 @@ async fn get_games(State(pool): State<AnyPool>) -> Json<Vec<GameSummary>> {
     };
 
     // Fetch all known players for name resolution
-    let mut known_players: std::collections::HashMap<String, String> = sqlx::query("SELECT id, name FROM players")
-        .fetch_all(&pool)
-        .await
-        .unwrap_or_default()
-        .into_iter()
-        .map(|row| (row.get("id"), row.get("name")))
-        .collect();
+    let mut known_players: std::collections::HashMap<String, String> =
+        sqlx::query("SELECT id, name FROM players")
+            .fetch_all(&pool)
+            .await
+            .unwrap_or_default()
+            .into_iter()
+            .map(|row| (row.get("id"), row.get("name")))
+            .collect();
 
     let mut games: Vec<GameSummary> = Vec::new();
 
@@ -508,30 +526,37 @@ async fn get_games(State(pool): State<AnyPool>) -> Json<Vec<GameSummary>> {
                 if let Some(state) = payload.bullseye.as_ref().and_then(|b| b.state.as_ref()) {
                     // Extract Players
                     if let Some(p_list) = &state.players {
-                        players = p_list.iter().map(|p| {
-                            let id = p.player_id.clone().unwrap_or_default();
-                            let nick_in_payload = p.nick.clone();
+                        players = p_list
+                            .iter()
+                            .map(|p| {
+                                let id = p.player_id.clone().unwrap_or_default();
+                                let nick_in_payload = p.nick.clone();
 
-                            // Update known_players if we have a new nick
-                            if let Some(n) = &nick_in_payload {
-                                known_players.insert(id.clone(), n.clone());
-                            }
+                                // Update known_players if we have a new nick
+                                if let Some(n) = &nick_in_payload {
+                                    known_players.insert(id.clone(), n.clone());
+                                }
 
-                            // Try to get name from payload, then directory (which includes what we just learned), then fallback to ID
-                            let name = nick_in_payload
-                                .or_else(|| known_players.get(&id).cloned())
-                                .or_else(|| Some(id.clone()))
-                                .unwrap_or_else(|| "Unknown".to_string());
-                            
-                            PlayerInfo { id, name }
-                        }).collect();
+                                // Try to get name from payload, then directory (which includes what we just learned), then fallback to ID
+                                let name = nick_in_payload
+                                    .or_else(|| known_players.get(&id).cloned())
+                                    .or_else(|| Some(id.clone()))
+                                    .unwrap_or_else(|| "Unknown".to_string());
+
+                                PlayerInfo { id, name }
+                            })
+                            .collect();
                     }
-                    
+
                     // Extract Country Codes (Flags)
                     if let Some(rounds) = &state.rounds {
                         round_count = rounds.len() as i64;
                         for round in rounds {
-                            if let Some(cc) = round.panorama.as_ref().and_then(|p| p.country_code.as_ref()) {
+                            if let Some(cc) = round
+                                .panorama
+                                .as_ref()
+                                .and_then(|p| p.country_code.as_ref())
+                            {
                                 country_codes.push(cc.clone());
                             }
                         }
@@ -544,14 +569,15 @@ async fn get_games(State(pool): State<AnyPool>) -> Json<Vec<GameSummary>> {
 
                     // Extract real played_at from rounds
                     if let Some(rounds) = &state.rounds {
-                        if let Some(first_round) = rounds.iter().find(|r| r.round_number == Some(1)) {
-                             if let Some(start) = &first_round.start_time {
-                                 played_at = start.clone();
-                             }
+                        if let Some(first_round) = rounds.iter().find(|r| r.round_number == Some(1))
+                        {
+                            if let Some(start) = &first_round.start_time {
+                                played_at = start.clone();
+                            }
                         } else if let Some(first) = rounds.first() {
-                             if let Some(start) = &first.start_time {
-                                 played_at = start.clone();
-                             }
+                            if let Some(start) = &first.start_time {
+                                played_at = start.clone();
+                            }
                         }
                     }
                 }
@@ -602,18 +628,21 @@ async fn get_games(State(pool): State<AnyPool>) -> Json<Vec<GameSummary>> {
         (status = 404, description = "Game not found")
     )
 )]
-async fn delete_game(
-    Path(id): Path<i64>,
-    State(pool): State<AnyPool>
-) -> StatusCode {
+async fn delete_game(Path(id): Path<i64>, State(pool): State<AnyPool>) -> StatusCode {
     let result = sqlx::query("DELETE FROM games WHERE id = $1")
         .bind(id)
         .execute(&pool)
         .await;
-    
+
     match result {
-        Ok(r) => if r.rows_affected() > 0 { StatusCode::OK } else { StatusCode::NOT_FOUND },
-        Err(_) => StatusCode::INTERNAL_SERVER_ERROR
+        Ok(r) => {
+            if r.rows_affected() > 0 {
+                StatusCode::OK
+            } else {
+                StatusCode::NOT_FOUND
+            }
+        }
+        Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
     }
 }
 
@@ -654,20 +683,30 @@ async fn get_stats(State(pool): State<AnyPool>) -> Json<GameStats> {
     let total_duration_seconds: i64 = row.try_get("sum_duration").unwrap_or(0);
 
     // Advanced stats (Best Country Guesses)
-    let rows = sqlx::query("SELECT data FROM games").fetch_all(&pool).await.unwrap_or_default();
+    let rows = sqlx::query("SELECT data FROM games")
+        .fetch_all(&pool)
+        .await
+        .unwrap_or_default();
 
-    let mut country_stats: std::collections::HashMap<String, (i32, i32)> = std::collections::HashMap::new();
+    let mut country_stats: std::collections::HashMap<String, (i32, i32)> =
+        std::collections::HashMap::new();
 
     for row in rows {
         let data_str: Option<String> = row.get("data");
         if let Some(data_str) = data_str {
             if let Ok(payload) = serde_json::from_str::<BullseyePayload>(&data_str) {
-                if let Some(rounds) = payload.bullseye.as_ref()
+                if let Some(rounds) = payload
+                    .bullseye
+                    .as_ref()
                     .and_then(|b| b.state.as_ref())
-                    .and_then(|s| s.rounds.as_ref()) 
+                    .and_then(|s| s.rounds.as_ref())
                 {
                     for round in rounds {
-                        if let Some(cc) = round.panorama.as_ref().and_then(|p| p.country_code.as_ref()) {
+                        if let Some(cc) = round
+                            .panorama
+                            .as_ref()
+                            .and_then(|p| p.country_code.as_ref())
+                        {
                             let points = round.score.as_ref().and_then(|s| s.points).unwrap_or(0);
                             let entry = country_stats.entry(cc.to_lowercase()).or_insert((0, 0));
                             entry.0 += points;
@@ -679,17 +718,26 @@ async fn get_stats(State(pool): State<AnyPool>) -> Json<GameStats> {
         }
     }
 
-    let mut best_countries: Vec<CountryStat> = country_stats.into_iter().map(|(code, (total, count))| {
-        CountryStat {
+    let mut best_countries: Vec<CountryStat> = country_stats
+        .into_iter()
+        .map(|(code, (total, count))| CountryStat {
             country_code: code,
             total_score: total,
             count,
-            average: if count > 0 { total as f64 / count as f64 } else { 0.0 },
-        }
-    }).collect();
+            average: if count > 0 {
+                total as f64 / count as f64
+            } else {
+                0.0
+            },
+        })
+        .collect();
 
     // Sort by average score descending
-    best_countries.sort_by(|a, b| b.average.partial_cmp(&a.average).unwrap_or(std::cmp::Ordering::Equal));
+    best_countries.sort_by(|a, b| {
+        b.average
+            .partial_cmp(&a.average)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     best_countries.truncate(10); // Top 10
 
     Json(GameStats {
@@ -722,7 +770,7 @@ struct TeamStats {
 )]
 async fn get_team_leaderboard(
     Query(params): Query<StatsQuery>,
-    State(pool): State<AnyPool>
+    State(pool): State<AnyPool>,
 ) -> Json<Vec<TeamStats>> {
     // 1. Fetch Alias Map
     let aliases = sqlx::query("SELECT alias_id, primary_id FROM player_aliases")
@@ -738,25 +786,29 @@ async fn get_team_leaderboard(
     }
 
     // Fetch known players for name resolution
-    let mut known_players: std::collections::HashMap<String, String> = sqlx::query("SELECT id, name FROM players")
+    let mut known_players: std::collections::HashMap<String, String> =
+        sqlx::query("SELECT id, name FROM players")
+            .fetch_all(&pool)
+            .await
+            .unwrap_or_default()
+            .into_iter()
+            .map(|row| (row.get("id"), row.get("name")))
+            .collect();
+
+    let rows = sqlx::query("SELECT data FROM games")
         .fetch_all(&pool)
         .await
-        .unwrap_or_default()
-        .into_iter()
-        .map(|row| (row.get("id"), row.get("name")))
-        .collect();
-
-    let rows = sqlx::query("SELECT data FROM games").fetch_all(&pool).await.unwrap_or_default();
+        .unwrap_or_default();
 
     // Map of Sorted Player IDs -> (Members, Total Score, Count, Total Duration)
-    let mut team_stats: std::collections::HashMap<String, (Vec<PlayerInfo>, i32, i32, i64)> = std::collections::HashMap::new();
+    let mut team_stats: std::collections::HashMap<String, (Vec<PlayerInfo>, i32, i32, i64)> =
+        std::collections::HashMap::new();
 
     for row in rows {
         let data_str: Option<String> = row.get("data");
         if let Some(data_str) = data_str {
             if let Ok(payload) = serde_json::from_str::<BullseyePayload>(&data_str) {
                 if let Some(state) = payload.bullseye.as_ref().and_then(|b| b.state.as_ref()) {
-                    
                     // Learn names
                     if let Some(players) = &state.players {
                         for p in players {
@@ -767,7 +819,11 @@ async fn get_team_leaderboard(
                     }
 
                     // Filter Abandons
-                    let is_finished = state.status.as_deref().map(|s| s.eq_ignore_ascii_case("finished")).unwrap_or(false);
+                    let is_finished = state
+                        .status
+                        .as_deref()
+                        .map(|s| s.eq_ignore_ascii_case("finished"))
+                        .unwrap_or(false);
                     if params.exclude_abandons == Some(true) && !is_finished {
                         continue;
                     }
@@ -775,47 +831,69 @@ async fn get_team_leaderboard(
                     if let Some(players) = &state.players {
                         if !players.is_empty() {
                             // Extract player info and resolve to Primary IDs
-                            let mut current_team_players: Vec<PlayerInfo> = players.iter().map(|p| {
-                                let pid = p.player_id.clone().unwrap_or_default();
-                                let primary_id = alias_map.get(&pid).cloned().unwrap_or(pid.clone());
-                                
-                                let name = known_players.get(&primary_id).cloned()
-                                    .or_else(|| known_players.get(&pid).cloned())
-                                    .or_else(|| p.nick.clone())
-                                    .unwrap_or_else(|| "Unknown".to_string());
+                            let mut current_team_players: Vec<PlayerInfo> = players
+                                .iter()
+                                .map(|p| {
+                                    let pid = p.player_id.clone().unwrap_or_default();
+                                    let primary_id =
+                                        alias_map.get(&pid).cloned().unwrap_or(pid.clone());
 
-                                PlayerInfo {
-                                    id: primary_id,
-                                    name
-                                }
-                            }).collect();
+                                    let name = known_players
+                                        .get(&primary_id)
+                                        .cloned()
+                                        .or_else(|| known_players.get(&pid).cloned())
+                                        .or_else(|| p.nick.clone())
+                                        .unwrap_or_else(|| "Unknown".to_string());
+
+                                    PlayerInfo {
+                                        id: primary_id,
+                                        name,
+                                    }
+                                })
+                                .collect();
 
                             // Sort by Player ID to ensure consistent team key
                             current_team_players.sort_by(|a, b| a.id.cmp(&b.id));
                             // Deduplicate (in case alias + primary were in same game?)
                             current_team_players.dedup_by(|a, b| a.id == b.id);
 
-                            let team_key = current_team_players.iter().map(|p| p.id.clone()).collect::<Vec<_>>().join(",");
-                            
+                            let team_key = current_team_players
+                                .iter()
+                                .map(|p| p.id.clone())
+                                .collect::<Vec<_>>()
+                                .join(",");
+
                             // Calculate Score for this game
                             let mut game_score = 0;
                             // Try from guess first
-                            if let Some(score) = payload.bullseye.as_ref().and_then(|b| b.guess.as_ref()).and_then(|g| g.score.as_ref()).and_then(|s| s.points) {
+                            if let Some(score) = payload
+                                .bullseye
+                                .as_ref()
+                                .and_then(|b| b.guess.as_ref())
+                                .and_then(|g| g.score.as_ref())
+                                .and_then(|s| s.points)
+                            {
                                 game_score = score;
                             } else if let Some(rounds) = &state.rounds {
-                                game_score = rounds.iter().filter_map(|r| r.score.as_ref().and_then(|s| s.points)).sum();
+                                game_score = rounds
+                                    .iter()
+                                    .filter_map(|r| r.score.as_ref().and_then(|s| s.points))
+                                    .sum();
                             }
 
                             let duration = payload.total_duration.unwrap_or(0) as i64;
 
                             // Update stats
-                            let entry = team_stats.entry(team_key.clone()).or_insert((Vec::new(), 0, 0, 0));
-                            
+                            let entry =
+                                team_stats
+                                    .entry(team_key.clone())
+                                    .or_insert((Vec::new(), 0, 0, 0));
+
                             // Update members if not set (first time)
                             if entry.0.is_empty() {
                                 entry.0 = current_team_players;
                             }
-                            
+
                             entry.1 += game_score;
                             entry.2 += 1;
                             entry.3 += duration;
@@ -826,20 +904,35 @@ async fn get_team_leaderboard(
         }
     }
 
-    let mut leaderboard: Vec<TeamStats> = team_stats.into_iter().map(|(_key, (members, total_score, count, total_duration))| {
-        let team_name = members.iter().map(|p| p.name.clone()).collect::<Vec<_>>().join(", ");
-        TeamStats {
-            team_name,
-            members,
-            games_played: count,
-            average_score: if count > 0 { total_score as f64 / count as f64 } else { 0.0 },
-            total_score,
-            total_duration,
-        }
-    }).collect();
+    let mut leaderboard: Vec<TeamStats> = team_stats
+        .into_iter()
+        .map(|(_key, (members, total_score, count, total_duration))| {
+            let team_name = members
+                .iter()
+                .map(|p| p.name.clone())
+                .collect::<Vec<_>>()
+                .join(", ");
+            TeamStats {
+                team_name,
+                members,
+                games_played: count,
+                average_score: if count > 0 {
+                    total_score as f64 / count as f64
+                } else {
+                    0.0
+                },
+                total_score,
+                total_duration,
+            }
+        })
+        .collect();
 
     // Sort by Average Score DESC
-    leaderboard.sort_by(|a, b| b.average_score.partial_cmp(&a.average_score).unwrap_or(std::cmp::Ordering::Equal));
+    leaderboard.sort_by(|a, b| {
+        b.average_score
+            .partial_cmp(&a.average_score)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
 
     Json(leaderboard)
 }
@@ -894,7 +987,7 @@ pub struct ScorePoint {
 async fn get_player_stats(
     Path(id): Path<String>,
     Query(params): Query<StatsQuery>,
-    State(pool): State<AnyPool>
+    State(pool): State<AnyPool>,
 ) -> Json<PlayerStatsDetailed> {
     let rows = sqlx::query("SELECT id, game_id, map_name, score, round_time, total_duration, played_at, data FROM games ORDER BY played_at DESC")
         .fetch_all(&pool)
@@ -903,21 +996,23 @@ async fn get_player_stats(
 
     // 1. Resolve Identity
     // Check if the requested ID is an alias
-    let primary_id_opt: Option<String> = sqlx::query_scalar("SELECT primary_id FROM player_aliases WHERE alias_id = $1")
-        .bind(&id)
-        .fetch_optional(&pool)
-        .await
-        .unwrap_or(None);
+    let primary_id_opt: Option<String> =
+        sqlx::query_scalar("SELECT primary_id FROM player_aliases WHERE alias_id = $1")
+            .bind(&id)
+            .fetch_optional(&pool)
+            .await
+            .unwrap_or(None);
 
     let effective_primary_id = primary_id_opt.unwrap_or_else(|| id.clone());
 
     // Get all IDs belonging to this identity (Primary + Aliases)
     let mut all_ids: Vec<String> = vec![effective_primary_id.clone()];
-    let aliases: Vec<String> = sqlx::query_scalar("SELECT alias_id FROM player_aliases WHERE primary_id = $1")
-        .bind(&effective_primary_id)
-        .fetch_all(&pool)
-        .await
-        .unwrap_or_default();
+    let aliases: Vec<String> =
+        sqlx::query_scalar("SELECT alias_id FROM player_aliases WHERE primary_id = $1")
+            .bind(&effective_primary_id)
+            .fetch_all(&pool)
+            .await
+            .unwrap_or_default();
     all_ids.extend(aliases);
 
     // Use a HashSet for fast lookup
@@ -926,26 +1021,28 @@ async fn get_player_stats(
     let mut total_games = 0;
     let mut total_score = 0;
     let mut total_duration = 0;
-    let mut country_stats: std::collections::HashMap<String, (i32, i32)> = std::collections::HashMap::new();
-    let mut team_stats: std::collections::HashMap<String, (Vec<PlayerInfo>, i32, i32)> = std::collections::HashMap::new();
+    let mut country_stats: std::collections::HashMap<String, (i32, i32)> =
+        std::collections::HashMap::new();
+    let mut team_stats: std::collections::HashMap<String, (Vec<PlayerInfo>, i32, i32)> =
+        std::collections::HashMap::new();
     let mut score_history: Vec<ScorePoint> = Vec::new();
     let mut player_games: Vec<GameSummary> = Vec::new();
 
     // Fetch all known players for name resolution
-    let mut known_players: std::collections::HashMap<String, String> = sqlx::query("SELECT id, name FROM players")
-        .fetch_all(&pool)
-        .await
-        .unwrap_or_default()
-        .into_iter()
-        .map(|row| (row.get("id"), row.get("name")))
-        .collect();
+    let mut known_players: std::collections::HashMap<String, String> =
+        sqlx::query("SELECT id, name FROM players")
+            .fetch_all(&pool)
+            .await
+            .unwrap_or_default()
+            .into_iter()
+            .map(|row| (row.get("id"), row.get("name")))
+            .collect();
 
     for row in rows {
         let data_str: Option<String> = row.get("data");
         if let Some(data_str) = data_str {
             if let Ok(payload) = serde_json::from_str::<BullseyePayload>(&data_str) {
                 if let Some(state) = payload.bullseye.as_ref().and_then(|b| b.state.as_ref()) {
-                    
                     // Learn names from this game (before filtering)
                     if let Some(players) = &state.players {
                         for p in players {
@@ -962,7 +1059,7 @@ async fn get_player_stats(
                                 continue;
                             }
                         } else {
-                            continue; 
+                            continue;
                         }
                     }
 
@@ -975,38 +1072,57 @@ async fn get_player_stats(
                         // Find the first matching player from our target_ids list
                         // In theory, a game shouldn't have multiple players that are actually the same person (unless multi-boxing?)
                         // We'll take the first match.
-                        if let Some(p) = players.iter().find(|p| p.player_id.as_ref().map(|pid| target_ids.contains(pid)).unwrap_or(false)) {
+                        if let Some(p) = players.iter().find(|p| {
+                            p.player_id
+                                .as_ref()
+                                .map(|pid| target_ids.contains(pid))
+                                .unwrap_or(false)
+                        }) {
                             player_in_game = true;
-                            
+
                             // Calculate score based on preference
                             let use_game_score = params.score_type.as_deref() == Some("game");
-                            
+
                             if use_game_score {
                                 // Force Game Score (sum of round scores)
                                 if let Some(rounds) = &state.rounds {
-                                    player_score = rounds.iter().filter_map(|r| r.score.as_ref().and_then(|s| s.points)).sum();
+                                    player_score = rounds
+                                        .iter()
+                                        .filter_map(|r| r.score.as_ref().and_then(|s| s.points))
+                                        .sum();
                                 }
                             } else {
                                 // Default / Personal Score
                                 if let Some(guesses) = &p.guesses {
-                                    player_score = guesses.iter().filter_map(|g| g.score.as_ref().and_then(|s| s.points)).sum();
+                                    player_score = guesses
+                                        .iter()
+                                        .filter_map(|g| g.score.as_ref().and_then(|s| s.points))
+                                        .sum();
                                 } else {
                                     // Fallback to round scores sum if no guesses found (legacy/co-op fallback)
                                     if let Some(rounds) = &state.rounds {
-                                        player_score = rounds.iter().filter_map(|r| r.score.as_ref().and_then(|s| s.points)).sum();
+                                        player_score = rounds
+                                            .iter()
+                                            .filter_map(|r| r.score.as_ref().and_then(|s| s.points))
+                                            .sum();
                                     }
                                 }
                             }
 
                             // Extract team members
-                            team_members = players.iter().map(|p| {
-                                let pid = p.player_id.clone().unwrap_or_default();
-                                let name = p.nick.clone()
-                                    .or_else(|| known_players.get(&pid).cloned())
-                                    .or_else(|| p.player_id.clone())
-                                    .unwrap_or_else(|| "Unknown".to_string());
-                                PlayerInfo { id: pid, name }
-                            }).collect();
+                            team_members = players
+                                .iter()
+                                .map(|p| {
+                                    let pid = p.player_id.clone().unwrap_or_default();
+                                    let name = p
+                                        .nick
+                                        .clone()
+                                        .or_else(|| known_players.get(&pid).cloned())
+                                        .or_else(|| p.player_id.clone())
+                                        .unwrap_or_else(|| "Unknown".to_string());
+                                    PlayerInfo { id: pid, name }
+                                })
+                                .collect();
                         }
                     }
 
@@ -1015,7 +1131,11 @@ async fn get_player_stats(
                     }
 
                     // Filter Abandons
-                    let is_finished = state.status.as_deref().map(|s| s.eq_ignore_ascii_case("finished")).unwrap_or(false);
+                    let is_finished = state
+                        .status
+                        .as_deref()
+                        .map(|s| s.eq_ignore_ascii_case("finished"))
+                        .unwrap_or(false);
                     if params.exclude_abandons == Some(true) && !is_finished {
                         continue;
                     }
@@ -1028,9 +1148,15 @@ async fn get_player_stats(
                     // Country Stats
                     if let Some(rounds) = &state.rounds {
                         for round in rounds {
-                            if let Some(cc) = round.panorama.as_ref().and_then(|p| p.country_code.as_ref()) {
-                                let points = round.score.as_ref().and_then(|s| s.points).unwrap_or(0);
-                                let entry = country_stats.entry(cc.to_lowercase()).or_insert((0, 0));
+                            if let Some(cc) = round
+                                .panorama
+                                .as_ref()
+                                .and_then(|p| p.country_code.as_ref())
+                            {
+                                let points =
+                                    round.score.as_ref().and_then(|s| s.points).unwrap_or(0);
+                                let entry =
+                                    country_stats.entry(cc.to_lowercase()).or_insert((0, 0));
                                 entry.0 += points;
                                 entry.1 += 1;
                             }
@@ -1040,9 +1166,16 @@ async fn get_player_stats(
                     // Team Stats (excluding solo games if desired, but user said "best teams")
                     if team_members.len() > 1 {
                         team_members.sort_by(|a, b| a.id.cmp(&b.id));
-                        let team_key = team_members.iter().map(|p| p.id.clone()).collect::<Vec<_>>().join(",");
+                        let team_key = team_members
+                            .iter()
+                            .map(|p| p.id.clone())
+                            .collect::<Vec<_>>()
+                            .join(",");
                         // We need to store the resolved members, so we use the ones we just extracted
-                        let entry = team_stats.entry(team_key).or_insert((team_members.clone(), 0, 0));
+                        let entry =
+                            team_stats
+                                .entry(team_key)
+                                .or_insert((team_members.clone(), 0, 0));
                         entry.1 += player_score;
                         entry.2 += 1;
                     }
@@ -1051,14 +1184,15 @@ async fn get_player_stats(
                     let mut played_at_str: String = row.try_get("played_at").unwrap_or_default();
                     // Try to extract real date from rounds (same logic as get_games)
                     if let Some(rounds) = &state.rounds {
-                         if let Some(first_round) = rounds.iter().find(|r| r.round_number == Some(1)) {
-                             if let Some(start) = &first_round.start_time {
-                                 played_at_str = start.clone();
-                             }
+                        if let Some(first_round) = rounds.iter().find(|r| r.round_number == Some(1))
+                        {
+                            if let Some(start) = &first_round.start_time {
+                                played_at_str = start.clone();
+                            }
                         } else if let Some(first) = rounds.first() {
-                             if let Some(start) = &first.start_time {
-                                 played_at_str = start.clone();
-                             }
+                            if let Some(start) = &first.start_time {
+                                played_at_str = start.clone();
+                            }
                         }
                     }
 
@@ -1074,22 +1208,27 @@ async fn get_player_stats(
                     let game_id_str: Option<String> = row.try_get("game_id").unwrap_or_default();
                     let map_name_str: Option<String> = row.try_get("map_name").unwrap_or_default();
                     let round_time_val: Option<i64> = row.try_get("round_time").unwrap_or_default();
-                    let total_duration_val: Option<i64> = row.try_get("total_duration").unwrap_or_default();
-                    
+                    let total_duration_val: Option<i64> =
+                        row.try_get("total_duration").unwrap_or_default();
+
                     // Extract Country Codes
                     let mut country_codes = Vec::new();
                     let mut round_count = 0;
                     if let Some(rounds) = &state.rounds {
                         round_count = rounds.len() as i64;
                         for round in rounds {
-                            if let Some(cc) = round.panorama.as_ref().and_then(|p| p.country_code.as_ref()) {
+                            if let Some(cc) = round
+                                .panorama
+                                .as_ref()
+                                .and_then(|p| p.country_code.as_ref())
+                            {
                                 country_codes.push(cc.clone());
                             }
                         }
                     }
 
                     // Re-extract team members for the summary (already have them)
-                    
+
                     player_games.push(GameSummary {
                         id: id_db,
                         game_id: game_id_str,
@@ -1110,40 +1249,67 @@ async fn get_player_stats(
     }
 
     // Process Country Stats
-    let mut all_countries: Vec<CountryStat> = country_stats.into_iter().map(|(code, (total, count))| {
-        CountryStat {
+    let mut all_countries: Vec<CountryStat> = country_stats
+        .into_iter()
+        .map(|(code, (total, count))| CountryStat {
             country_code: code,
             total_score: total,
             count,
-            average: if count > 0 { total as f64 / count as f64 } else { 0.0 },
-        }
-    }).collect();
+            average: if count > 0 {
+                total as f64 / count as f64
+            } else {
+                0.0
+            },
+        })
+        .collect();
 
     // Sort for Best (Avg DESC)
-    all_countries.sort_by(|a, b| b.average.partial_cmp(&a.average).unwrap_or(std::cmp::Ordering::Equal));
+    all_countries.sort_by(|a, b| {
+        b.average
+            .partial_cmp(&a.average)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     let best_countries = all_countries.iter().take(3).cloned().collect();
 
     // Sort for Worst (Avg ASC)
-    all_countries.sort_by(|a, b| a.average.partial_cmp(&b.average).unwrap_or(std::cmp::Ordering::Equal));
+    all_countries.sort_by(|a, b| {
+        a.average
+            .partial_cmp(&b.average)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     let worst_countries = all_countries.iter().take(3).cloned().collect();
 
     // Process Team Stats
-    let mut best_teams: Vec<TeamStatSimple> = team_stats.into_iter().map(|(_key, (members, total, count))| {
-        TeamStatSimple {
-            team_name: members.iter().map(|p| p.name.clone()).collect::<Vec<_>>().join(", "),
+    let mut best_teams: Vec<TeamStatSimple> = team_stats
+        .into_iter()
+        .map(|(_key, (members, total, count))| TeamStatSimple {
+            team_name: members
+                .iter()
+                .map(|p| p.name.clone())
+                .collect::<Vec<_>>()
+                .join(", "),
             members,
-            average_score: if count > 0 { total as f64 / count as f64 } else { 0.0 },
+            average_score: if count > 0 {
+                total as f64 / count as f64
+            } else {
+                0.0
+            },
             games_played: count,
-        }
-    }).collect();
-    best_teams.sort_by(|a, b| b.average_score.partial_cmp(&a.average_score).unwrap_or(std::cmp::Ordering::Equal));
+        })
+        .collect();
+    best_teams.sort_by(|a, b| {
+        b.average_score
+            .partial_cmp(&a.average_score)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
 
     // Fetch player name (using effective primary ID)
-    let mut player_name: Option<String> = sqlx::query_scalar("SELECT name FROM players WHERE id = ?")
-        .bind(&effective_primary_id)
-        .fetch_optional(&pool)
-        .await
-        .unwrap_or(None);
+    let mut player_name: Option<String> =
+        sqlx::query_scalar("SELECT name FROM players WHERE id = ?")
+            .bind(&effective_primary_id)
+            .fetch_optional(&pool)
+            .await
+            .unwrap_or(None);
 
     // Fallback: Try to find name in known_players if not in DB
     if player_name.is_none() {
@@ -1155,7 +1321,11 @@ async fn get_player_stats(
     Json(PlayerStatsDetailed {
         player_id: effective_primary_id, // Return the primary ID
         total_games,
-        average_score: if total_games > 0 { total_score as f64 / total_games as f64 } else { 0.0 },
+        average_score: if total_games > 0 {
+            total_score as f64 / total_games as f64
+        } else {
+            0.0
+        },
         total_duration,
         best_countries,
         worst_countries,
@@ -1194,7 +1364,7 @@ struct TeamStatsDetailed {
 async fn get_team_stats(
     Path(id): Path<String>,
     Query(params): Query<StatsQuery>,
-    State(pool): State<AnyPool>
+    State(pool): State<AnyPool>,
 ) -> Json<TeamStatsDetailed> {
     // 1. Fetch Alias Map
     let aliases = sqlx::query("SELECT alias_id, primary_id FROM player_aliases")
@@ -1210,13 +1380,14 @@ async fn get_team_stats(
     }
 
     // 2. Resolve Requested Team IDs to Primary IDs
-    let team_player_ids: Vec<String> = id.split(',')
+    let team_player_ids: Vec<String> = id
+        .split(',')
         .map(|s| {
             let trimmed = s.trim().to_string();
             alias_map.get(&trimmed).cloned().unwrap_or(trimmed)
         })
         .collect();
-    
+
     let mut team_player_ids_sorted = team_player_ids.clone();
     team_player_ids_sorted.sort();
     // Deduplicate in case multiple aliases of the same person were requested
@@ -1230,26 +1401,27 @@ async fn get_team_stats(
     let mut total_games = 0;
     let mut total_score = 0;
     let mut total_duration = 0;
-    let mut country_stats: std::collections::HashMap<String, (i32, i32)> = std::collections::HashMap::new();
+    let mut country_stats: std::collections::HashMap<String, (i32, i32)> =
+        std::collections::HashMap::new();
     let mut score_history: Vec<ScorePoint> = Vec::new();
     let mut team_games: Vec<GameSummary> = Vec::new();
     let mut team_members_info: Vec<PlayerInfo> = Vec::new();
 
     // Fetch known players for name resolution
-    let mut known_players: std::collections::HashMap<String, String> = sqlx::query("SELECT id, name FROM players")
-        .fetch_all(&pool)
-        .await
-        .unwrap_or_default()
-        .into_iter()
-        .map(|row| (row.get("id"), row.get("name")))
-        .collect();
+    let mut known_players: std::collections::HashMap<String, String> =
+        sqlx::query("SELECT id, name FROM players")
+            .fetch_all(&pool)
+            .await
+            .unwrap_or_default()
+            .into_iter()
+            .map(|row| (row.get("id"), row.get("name")))
+            .collect();
 
     for row in rows {
         let data_str: Option<String> = row.get("data");
         if let Some(data_str) = data_str {
             if let Ok(payload) = serde_json::from_str::<BullseyePayload>(&data_str) {
                 if let Some(state) = payload.bullseye.as_ref().and_then(|b| b.state.as_ref()) {
-                    
                     // Learn names
                     if let Some(players) = &state.players {
                         for p in players {
@@ -1266,14 +1438,15 @@ async fn get_team_stats(
                                 continue;
                             }
                         } else {
-                            continue; 
+                            continue;
                         }
                     }
 
                     // Check if this game matches the team
                     if let Some(players) = &state.players {
                         // Resolve game players to Primary IDs
-                        let mut game_player_ids: Vec<String> = players.iter()
+                        let mut game_player_ids: Vec<String> = players
+                            .iter()
                             .map(|p| {
                                 let pid = p.player_id.clone().unwrap_or_default();
                                 alias_map.get(&pid).cloned().unwrap_or(pid)
@@ -1291,42 +1464,61 @@ async fn get_team_stats(
                         // Let's stick to names from the game for now, but maybe we should resolve them to the primary name?
                         // For now, just use the game's info.
                         if team_members_info.is_empty() {
-                            team_members_info = players.iter().map(|p| {
-                                let pid = p.player_id.clone().unwrap_or_default();
-                                // Try to get the name of the PRIMARY ID if it's an alias
-                                let primary_id = alias_map.get(&pid).cloned().unwrap_or(pid.clone());
-                                
-                                // Name resolution: 
-                                // 1. Try known_players[primary_id] (Best: Primary Name)
-                                // 2. Try known_players[pid] (Fallback: Alias Name)
-                                // 3. Try p.nick (Game Name)
-                                let name = known_players.get(&primary_id).cloned()
-                                    .or_else(|| known_players.get(&pid).cloned())
-                                    .or_else(|| p.nick.clone())
-                                    .unwrap_or_else(|| "Unknown".to_string());
+                            team_members_info = players
+                                .iter()
+                                .map(|p| {
+                                    let pid = p.player_id.clone().unwrap_or_default();
+                                    // Try to get the name of the PRIMARY ID if it's an alias
+                                    let primary_id =
+                                        alias_map.get(&pid).cloned().unwrap_or(pid.clone());
 
-                                PlayerInfo {
-                                    id: primary_id, // Use Primary ID
-                                    name
-                                }
-                            }).collect();
+                                    // Name resolution:
+                                    // 1. Try known_players[primary_id] (Best: Primary Name)
+                                    // 2. Try known_players[pid] (Fallback: Alias Name)
+                                    // 3. Try p.nick (Game Name)
+                                    let name = known_players
+                                        .get(&primary_id)
+                                        .cloned()
+                                        .or_else(|| known_players.get(&pid).cloned())
+                                        .or_else(|| p.nick.clone())
+                                        .unwrap_or_else(|| "Unknown".to_string());
+
+                                    PlayerInfo {
+                                        id: primary_id, // Use Primary ID
+                                        name,
+                                    }
+                                })
+                                .collect();
                         }
                     } else {
                         continue;
                     }
 
                     // Filter Abandons
-                    let is_finished = state.status.as_deref().map(|s| s.eq_ignore_ascii_case("finished")).unwrap_or(false);
+                    let is_finished = state
+                        .status
+                        .as_deref()
+                        .map(|s| s.eq_ignore_ascii_case("finished"))
+                        .unwrap_or(false);
                     if params.exclude_abandons == Some(true) && !is_finished {
                         continue;
                     }
 
                     // Calculate Game Score
                     let mut game_score = 0;
-                    if let Some(score) = payload.bullseye.as_ref().and_then(|b| b.guess.as_ref()).and_then(|g| g.score.as_ref()).and_then(|s| s.points) {
+                    if let Some(score) = payload
+                        .bullseye
+                        .as_ref()
+                        .and_then(|b| b.guess.as_ref())
+                        .and_then(|g| g.score.as_ref())
+                        .and_then(|s| s.points)
+                    {
                         game_score = score;
                     } else if let Some(rounds) = &state.rounds {
-                        game_score = rounds.iter().filter_map(|r| r.score.as_ref().and_then(|s| s.points)).sum();
+                        game_score = rounds
+                            .iter()
+                            .filter_map(|r| r.score.as_ref().and_then(|s| s.points))
+                            .sum();
                     }
 
                     // --- Aggregation ---
@@ -1337,9 +1529,15 @@ async fn get_team_stats(
                     // Country Stats
                     if let Some(rounds) = &state.rounds {
                         for round in rounds {
-                            if let Some(cc) = round.panorama.as_ref().and_then(|p| p.country_code.as_ref()) {
-                                let points = round.score.as_ref().and_then(|s| s.points).unwrap_or(0);
-                                let entry = country_stats.entry(cc.to_lowercase()).or_insert((0, 0));
+                            if let Some(cc) = round
+                                .panorama
+                                .as_ref()
+                                .and_then(|p| p.country_code.as_ref())
+                            {
+                                let points =
+                                    round.score.as_ref().and_then(|s| s.points).unwrap_or(0);
+                                let entry =
+                                    country_stats.entry(cc.to_lowercase()).or_insert((0, 0));
                                 entry.0 += points;
                                 entry.1 += 1;
                             }
@@ -1349,14 +1547,15 @@ async fn get_team_stats(
                     // Score History
                     let mut played_at_str: String = row.try_get("played_at").unwrap_or_default();
                     if let Some(rounds) = &state.rounds {
-                         if let Some(first_round) = rounds.iter().find(|r| r.round_number == Some(1)) {
-                             if let Some(start) = &first_round.start_time {
-                                 played_at_str = start.clone();
-                             }
+                        if let Some(first_round) = rounds.iter().find(|r| r.round_number == Some(1))
+                        {
+                            if let Some(start) = &first_round.start_time {
+                                played_at_str = start.clone();
+                            }
                         } else if let Some(first) = rounds.first() {
-                             if let Some(start) = &first.start_time {
-                                 played_at_str = start.clone();
-                             }
+                            if let Some(start) = &first.start_time {
+                                played_at_str = start.clone();
+                            }
                         }
                     }
 
@@ -1371,14 +1570,19 @@ async fn get_team_stats(
                     let game_id_str: Option<String> = row.try_get("game_id").unwrap_or_default();
                     let map_name_str: Option<String> = row.try_get("map_name").unwrap_or_default();
                     let round_time_val: Option<i64> = row.try_get("round_time").unwrap_or_default();
-                    let total_duration_val: Option<i64> = row.try_get("total_duration").unwrap_or_default();
-                    
+                    let total_duration_val: Option<i64> =
+                        row.try_get("total_duration").unwrap_or_default();
+
                     let mut country_codes = Vec::new();
                     let mut round_count = 0;
                     if let Some(rounds) = &state.rounds {
                         round_count = rounds.len() as i64;
                         for round in rounds {
-                            if let Some(cc) = round.panorama.as_ref().and_then(|p| p.country_code.as_ref()) {
+                            if let Some(cc) = round
+                                .panorama
+                                .as_ref()
+                                .and_then(|p| p.country_code.as_ref())
+                            {
                                 country_codes.push(cc.clone());
                             }
                         }
@@ -1404,29 +1608,50 @@ async fn get_team_stats(
     }
 
     // Process Country Stats
-    let mut all_countries: Vec<CountryStat> = country_stats.into_iter().map(|(code, (total, count))| {
-        CountryStat {
+    let mut all_countries: Vec<CountryStat> = country_stats
+        .into_iter()
+        .map(|(code, (total, count))| CountryStat {
             country_code: code,
             total_score: total,
             count,
-            average: if count > 0 { total as f64 / count as f64 } else { 0.0 },
-        }
-    }).collect();
+            average: if count > 0 {
+                total as f64 / count as f64
+            } else {
+                0.0
+            },
+        })
+        .collect();
 
-    all_countries.sort_by(|a, b| b.average.partial_cmp(&a.average).unwrap_or(std::cmp::Ordering::Equal));
+    all_countries.sort_by(|a, b| {
+        b.average
+            .partial_cmp(&a.average)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     let best_countries = all_countries.iter().take(3).cloned().collect();
 
-    all_countries.sort_by(|a, b| a.average.partial_cmp(&b.average).unwrap_or(std::cmp::Ordering::Equal));
+    all_countries.sort_by(|a, b| {
+        a.average
+            .partial_cmp(&b.average)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     let worst_countries = all_countries.iter().take(3).cloned().collect();
 
-    let team_name = team_members_info.iter().map(|p| p.name.clone()).collect::<Vec<_>>().join(", ");
+    let team_name = team_members_info
+        .iter()
+        .map(|p| p.name.clone())
+        .collect::<Vec<_>>()
+        .join(", ");
 
     Json(TeamStatsDetailed {
         team_id: id,
         team_name,
         members: team_members_info,
         total_games,
-        average_score: if total_games > 0 { total_score as f64 / total_games as f64 } else { 0.0 },
+        average_score: if total_games > 0 {
+            total_score as f64 / total_games as f64
+        } else {
+            0.0
+        },
         total_duration,
         best_countries,
         worst_countries,
@@ -1472,7 +1697,8 @@ async fn get_admin_players(State(pool): State<AnyPool>) -> Json<Vec<AdminPlayerI
 
     println!("Debug: Backfill - Fetched {} games", game_rows.len());
 
-    let mut found_players: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+    let mut found_players: std::collections::HashMap<String, String> =
+        std::collections::HashMap::new();
 
     for row in game_rows {
         let data_str: Option<String> = row.get("data");
@@ -1493,19 +1719,22 @@ async fn get_admin_players(State(pool): State<AnyPool>) -> Json<Vec<AdminPlayerI
         }
     }
 
-    println!("Debug: Backfill - Found {} unique players", found_players.len());
+    println!(
+        "Debug: Backfill - Found {} unique players",
+        found_players.len()
+    );
 
     // Upsert found players into DB
     for (id, name) in found_players {
         let res = sqlx::query(
-            "INSERT INTO players (id, name, last_seen) VALUES ($1, $2, CURRENT_TIMESTAMP) 
-             ON CONFLICT(id) DO UPDATE SET name = excluded.name"
+            "INSERT INTO players (id, name, last_seen) VALUES ($1, $2, CURRENT_TIMESTAMP)
+             ON CONFLICT(id) DO UPDATE SET name = excluded.name",
         )
         .bind(&id)
         .bind(&name)
         .execute(&pool)
         .await;
-        
+
         if let Err(e) = res {
             println!("Debug: Failed to upsert player {}: {:?}", id, e);
         }
@@ -1527,20 +1756,24 @@ async fn get_admin_players(State(pool): State<AnyPool>) -> Json<Vec<AdminPlayerI
 
     // Build lookup maps
     let mut alias_map: std::collections::HashMap<String, String> = std::collections::HashMap::new(); // alias -> primary
-    let mut reverse_alias_map: std::collections::HashMap<String, Vec<String>> = std::collections::HashMap::new(); // primary -> [aliases]
+    let mut reverse_alias_map: std::collections::HashMap<String, Vec<String>> =
+        std::collections::HashMap::new(); // primary -> [aliases]
 
     for row in aliases {
         let alias_id: String = row.get("alias_id");
         let primary_id: String = row.get("primary_id");
         alias_map.insert(alias_id.clone(), primary_id.clone());
-        reverse_alias_map.entry(primary_id).or_default().push(alias_id);
+        reverse_alias_map
+            .entry(primary_id)
+            .or_default()
+            .push(alias_id);
     }
 
     let mut result = Vec::new();
     for row in players {
         let id: String = row.get("id");
         let name: String = row.get("name");
-        
+
         let primary_id = alias_map.get(&id).cloned();
         let aliases = reverse_alias_map.get(&id).cloned().unwrap_or_default();
 
@@ -1573,10 +1806,10 @@ async fn link_player(
     }
 
     // Prevent circular dependency: Check if primary_id is already an alias of alias_id (or anyone else)
-    // For simplicity, just ensure primary_id is NOT an alias itself. 
+    // For simplicity, just ensure primary_id is NOT an alias itself.
     // A more robust check would traverse the tree, but 1-level depth is easier to manage.
     // Rule: A Primary ID cannot be an Alias. An Alias cannot have Aliases.
-    
+
     // Check if primary is already an alias
     let primary_is_alias = sqlx::query("SELECT 1 FROM player_aliases WHERE alias_id = $1")
         .bind(&payload.primary_id)
@@ -1603,8 +1836,8 @@ async fn link_player(
 
     // Upsert the link
     let _ = sqlx::query(
-        "INSERT INTO player_aliases (alias_id, primary_id) VALUES ($1, $2) 
-         ON CONFLICT(alias_id) DO UPDATE SET primary_id = excluded.primary_id"
+        "INSERT INTO player_aliases (alias_id, primary_id) VALUES ($1, $2)
+         ON CONFLICT(alias_id) DO UPDATE SET primary_id = excluded.primary_id",
     )
     .bind(&payload.alias_id)
     .bind(&payload.primary_id)

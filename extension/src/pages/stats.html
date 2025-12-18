@@ -1,67 +1,71 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Statistiques du Joueur</title>
-    <link rel="stylesheet" href="stats.css">
-</head>
-<body>
+    <link rel="stylesheet" href="stats.css" />
+  </head>
+  <body>
     <div class="container">
-        <header class="page-header">
-            <h1>Statistiques pour <span id="playerName">...</span></h1>
-            <nav class="header-nav">
-                <a href="leaderboard.html" class="btn btn-secondary">Voir les Leaderboards</a>
-                <a href="history.html" class="btn btn-secondary">Retour à l'Historique</a>
-            </nav>
-        </header>
+      <header class="page-header">
+        <h1>Statistiques pour <span id="playerName">...</span></h1>
+        <nav class="header-nav">
+          <a href="leaderboard.html" class="btn btn-secondary"
+            >Voir les Leaderboards</a
+          >
+          <a href="history.html" class="btn btn-secondary"
+            >Retour à l'Historique</a
+          >
+        </nav>
+      </header>
 
-        <div class="stats-grid">
-            <!-- Camembert Moyenne Générale -->
-            <div class="card">
-                <h2>Moyenne Générale</h2>
-                <div class="chart-container">
-                    <div id="avgScoreChart"></div>
-                </div>
-            </div>
-
-            <!-- Meilleure Équipe -->
-            <div class="card best-team-card">
-                <h2>Meilleure Équipe</h2>
-                <div id="bestTeamLoading">Calcul...</div>
-                <div id="bestTeamContent" style="display: none;">
-                    <div class="team-names" id="bestTeamNames"></div>
-                    <div class="team-avg-score" id="bestTeamScore"></div>
-                    <div class="game-count" id="bestTeamGameCount"></div>
-                </div>
-            </div>
-
-            <!-- Score par Nombre de Joueurs -->
-            <div class="card">
-                <h2>Score par Nb. de Joueurs</h2>
-                <div class="chart-container">
-                    <div id="scoreByPlayersChart"></div>
-                </div>
-            </div>
-
-            <!-- Score par Carte -->
-            <div class="card">
-                <h2>Score par Carte</h2>
-                <div class="chart-container">
-                    <div id="scoreByMapChart"></div>
-                </div>
-            </div>
-
-            <!-- Évolution du score -->
-            <div class="card full-width">
-                <h2>Évolution du Score (Moyenne par Jour)</h2>
-                <div class="chart-container" style="height: 400px;">
-                    <div id="scoreOverTimeChart"></div>
-                </div>
-            </div>
+      <div class="stats-grid">
+        <!-- Camembert Moyenne Générale -->
+        <div class="card">
+          <h2>Moyenne Générale</h2>
+          <div class="chart-container">
+            <div id="avgScoreChart"></div>
+          </div>
         </div>
+
+        <!-- Meilleure Équipe -->
+        <div class="card best-team-card">
+          <h2>Meilleure Équipe</h2>
+          <div id="bestTeamLoading">Calcul...</div>
+          <div id="bestTeamContent" style="display: none">
+            <div class="team-names" id="bestTeamNames"></div>
+            <div class="team-avg-score" id="bestTeamScore"></div>
+            <div class="game-count" id="bestTeamGameCount"></div>
+          </div>
+        </div>
+
+        <!-- Score par Nombre de Joueurs -->
+        <div class="card">
+          <h2>Score par Nb. de Joueurs</h2>
+          <div class="chart-container">
+            <div id="scoreByPlayersChart"></div>
+          </div>
+        </div>
+
+        <!-- Score par Carte -->
+        <div class="card">
+          <h2>Score par Carte</h2>
+          <div class="chart-container">
+            <div id="scoreByMapChart"></div>
+          </div>
+        </div>
+
+        <!-- Évolution du score -->
+        <div class="card full-width">
+          <h2>Évolution du Score (Moyenne par Jour)</h2>
+          <div class="chart-container" style="height: 400px">
+            <div id="scoreOverTimeChart"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script src="stats.js"></script>
-</body>
+  </body>
 </html>

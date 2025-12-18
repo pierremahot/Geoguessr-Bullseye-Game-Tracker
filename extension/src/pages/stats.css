@@ -1,130 +1,133 @@
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
-    background-color: #f4f4f5; /* gray-100 */
-    color: #111827; /* gray-900 */
-    padding: 24px;
-    margin: 0;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
+  background-color: #f4f4f5; /* gray-100 */
+  color: #111827; /* gray-900 */
+  padding: 24px;
+  margin: 0;
 }
 
 .container {
-    max-width: 1280px;
-    margin: 0 auto;
+  max-width: 1280px;
+  margin: 0 auto;
 }
 
 /* Page Header */
 .page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid #d1d5db; /* gray-300 */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #d1d5db; /* gray-300 */
 }
 
 h1 {
-    font-size: 1.875rem; /* 3xl */
-    font-weight: 700;
-    margin: 0;
+  font-size: 1.875rem; /* 3xl */
+  font-weight: 700;
+  margin: 0;
 }
 
 h1 span {
-    color: #dc2626; /* red-600 */
+  color: #dc2626; /* red-600 */
 }
 
 .header-nav {
-    display: flex;
-    gap: 12px;
+  display: flex;
+  gap: 12px;
 }
 
 .btn {
-    border-radius: 6px;
-    padding: 8px 16px;
-    font-size: 0.875rem;
-    font-weight: 500;
-    border: 1px solid transparent;
-    cursor: pointer;
-    transition: background-color 0.2s, color 0.2s;
-    text-decoration: none;
-    display: inline-block;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+  text-decoration: none;
+  display: inline-block;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .btn-secondary {
-    background-color: #ffffff;
-    color: #374151; /* gray-700 */
-    border-color: #d1d5db; /* gray-300 */
+  background-color: #ffffff;
+  color: #374151; /* gray-700 */
+  border-color: #d1d5db; /* gray-300 */
 }
 
 .btn-secondary:hover {
-    background-color: #f9fafb; /* gray-50 */
+  background-color: #f9fafb; /* gray-50 */
 }
 
 h2 {
-    font-size: 1.25rem; /* xl */
-    font-weight: 600;
-    margin-top: 0;
-    margin-bottom: 16px;
-    border-bottom: 1px solid #e5e7eb; /* gray-200 */
-    padding-bottom: 8px;
+  font-size: 1.25rem; /* xl */
+  font-weight: 600;
+  margin-top: 0;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb; /* gray-200 */
+  padding-bottom: 8px;
 }
 
 /* Stats Grid */
 .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(1, 1fr);
-    gap: 24px;
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 24px;
 }
 @media (min-width: 768px) {
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 @media (min-width: 1024px) {
-    .stats-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 .card {
-    background-color: #ffffff;
-    border-radius: 8px;
-    padding: 24px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .card.full-width {
-    grid-column: 1 / -1;
+  grid-column: 1 / -1;
 }
 
 .chart-container {
-    position: relative;
-    height: 300px;
-    width: 100%;
+  position: relative;
+  height: 300px;
+  width: 100%;
 }
 
 /* Best Team Card */
 .best-team-card {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
 }
 
 .best-team-card .team-names {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin-bottom: 8px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 8px;
 }
 
 .best-team-card .team-avg-score {
-    font-size: 2.25rem;
-    font-weight: 700;
-    color: #16a34a; /* green-600 */
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: #16a34a; /* green-600 */
 }
 
 .best-team-card .game-count {
-    font-size: 0.875rem;
-    color: #6b7280; /* gray-500 */
-    margin-top: 4px;
+  font-size: 0.875rem;
+  color: #6b7280; /* gray-500 */
+  margin-top: 4px;
 }

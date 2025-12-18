@@ -1,78 +1,109 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Full Game History</title>
-    <link rel="stylesheet" href="history.css">
-</head>
+    <link rel="stylesheet" href="history.css" />
+  </head>
 
-<body>
+  <body>
     <div class="container">
-        <div class="header">
-            <h1>Full Game History</h1>
-            <div class="header-actions">
-                <a href="leaderboard.html" class="btn btn-secondary">View Leaderboards</a>
-                <button id="clearHistory" class="btn btn-danger">
-                    Clear All History
-                </button>
-            </div>
+      <div class="header">
+        <h1>Full Game History</h1>
+        <div class="header-actions">
+          <a href="leaderboard.html" class="btn btn-secondary"
+            >View Leaderboards</a
+          >
+          <button id="clearHistory" class="btn btn-danger">
+            Clear All History
+          </button>
         </div>
+      </div>
 
-        <!-- History Table -->
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <!-- MODIFIÉ : Ajout des classes 'sortable' et data-sort-key -->
-                        <th class="sortable sort-desc" data-sort-key="date">
-                            Date <span class="sort-arrow">▼</span>
-                        </th>
-                        <th class="sortable" data-sort-key="players">
-                            Players <span class="sort-arrow">▼</span>
-                        </th>
-                        <!-- NOUVEAU : Colonne pour la carte -->
-                        <th class="sortable" data-sort-key="map">Map <span class="sort-arrow">▼</span></th>
-                        <th>Limit</th>
-                        <th>Duration</th>
-                        <th class="sortable" data-sort-key="score">
-                            Score <span class="sort-arrow">▼</span>
-                        </th>
-                        <th>Status</th>
-                        <th>Lien</th>
-                        <th style="text-align: right;">Actions</th>
-                    </tr>
-                    <!-- AJOUT : Ligne pour les filtres -->
-                    <tr class="filter-row">
-                        <td><input type="text" id="dateFilter" placeholder="Filtrer par date..."></td>
-                        <td><input type="text" id="playersFilter" placeholder="Filtrer par joueur..."></td>
-                        <td><input type="text" id="mapFilter" placeholder="Filtrer par carte..."></td>
-                        <td><input type="text" id="scoreFilter" placeholder="Filtrer par score..."></td>
-                        <td></td> <!-- Status filter (disabled) -->
-                        <td></td> <!-- Link filter (disabled) -->
-                        <td></td> <!-- Actions (disabled) -->
-                    </tr>
-                </thead>
-                <tbody id="historyTableBody">
-                    <tr>
-                        <td colspan="6" style="text-align: center;">Loading history...</td>
-                    </tr>
-                </tbody>
-                <!-- AJOUT : Pied de tableau pour la moyenne -->
-                <tfoot>
-                    <tr>
-                        <td colspan="3" style="text-align: right; font-weight: 700;">Moyenne du score (filtré) :</td>
-                        <td id="averageScoreCell" colspan="4">0</td>
-                    </tr>
-                </tfoot>
-            </table>
-        </div>
+      <!-- History Table -->
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <!-- MODIFIÉ : Ajout des classes 'sortable' et data-sort-key -->
+              <th class="sortable sort-desc" data-sort-key="date">
+                Date <span class="sort-arrow">▼</span>
+              </th>
+              <th class="sortable" data-sort-key="players">
+                Players <span class="sort-arrow">▼</span>
+              </th>
+              <!-- NOUVEAU : Colonne pour la carte -->
+              <th class="sortable" data-sort-key="map">
+                Map <span class="sort-arrow">▼</span>
+              </th>
+              <th>Limit</th>
+              <th>Duration</th>
+              <th class="sortable" data-sort-key="score">
+                Score <span class="sort-arrow">▼</span>
+              </th>
+              <th>Status</th>
+              <th>Lien</th>
+              <th style="text-align: right">Actions</th>
+            </tr>
+            <!-- AJOUT : Ligne pour les filtres -->
+            <tr class="filter-row">
+              <td>
+                <input
+                  type="text"
+                  id="dateFilter"
+                  placeholder="Filtrer par date..."
+                />
+              </td>
+              <td>
+                <input
+                  type="text"
+                  id="playersFilter"
+                  placeholder="Filtrer par joueur..."
+                />
+              </td>
+              <td>
+                <input
+                  type="text"
+                  id="mapFilter"
+                  placeholder="Filtrer par carte..."
+                />
+              </td>
+              <td>
+                <input
+                  type="text"
+                  id="scoreFilter"
+                  placeholder="Filtrer par score..."
+                />
+              </td>
+              <td></td>
+              <!-- Status filter (disabled) -->
+              <td></td>
+              <!-- Link filter (disabled) -->
+              <td></td>
+              <!-- Actions (disabled) -->
+            </tr>
+          </thead>
+          <tbody id="historyTableBody">
+            <tr>
+              <td colspan="6" style="text-align: center">Loading history...</td>
+            </tr>
+          </tbody>
+          <!-- AJOUT : Pied de tableau pour la moyenne -->
+          <tfoot>
+            <tr>
+              <td colspan="3" style="text-align: right; font-weight: 700">
+                Moyenne du score (filtré) :
+              </td>
+              <td id="averageScoreCell" colspan="4">0</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
     </div>
 
     <!-- Link to the JS file -->
     <!-- Ce fichier est généré par la commande 'bun run build' -->
     <script src="history.js"></script>
-</body>
-
+  </body>
 </html>

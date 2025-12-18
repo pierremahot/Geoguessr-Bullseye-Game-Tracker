@@ -1,0 +1,82 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+        exclude: ^charts/.*/templates/.*\.yaml$
+      - id: check-added-large-files
+      - id: check-merge-conflict
+
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: package.lock.json
+
+  # Backend (Rust)
+  - repo: local
+    hooks:
+      - id: cargo-fmt
+        name: Cargo Fmt
+        entry: bash -c 'cd backend && cargo fmt --all -- --check'
+        language: system
+        files: ^backend/
+        types: [rust]
+        pass_filenames: false
+
+      - id: cargo-clippy
+        name: Cargo Clippy
+        entry: bash -c 'cd backend && cargo clippy -- -D warnings'
+        language: system
+        files: ^backend/
+        types: [rust]
+        pass_filenames: false
+
+  # Frontend & Extension (Bun - Local)
+  - repo: local
+    hooks:
+      - id: frontend-lint
+        name: Frontend Lint (Bun)
+        entry: bash -c 'cd frontend && bun run lint'
+        language: system
+        files: ^frontend/
+        types: [file]
+        pass_filenames: false
+
+      - id: frontend-format
+        name: Frontend Format (Bun)
+        entry: bash -c 'cd frontend && bun run format'
+        language: system
+        files: ^frontend/
+        types: [file]
+        pass_filenames: false
+
+      - id: extension-lint
+        name: Extension Lint (Bun)
+        entry: bash -c 'cd extension && bun run lint'
+        language: system
+        files: ^extension/
+        types: [file]
+        pass_filenames: false
+
+      - id: extension-format
+        name: Extension Format (Bun)
+        entry: bash -c 'cd extension && bun run format'
+        language: system
+        files: ^extension/
+        types: [file]
+        pass_filenames: false
+
+  # Infrastructure (Helm)
+  - repo: local
+    hooks:
+      - id: helm-lint
+        name: Helm Lint
+        entry: helm lint charts/bullseye
+        language: system
+        files: ^charts/bullseye/
+        pass_filenames: false

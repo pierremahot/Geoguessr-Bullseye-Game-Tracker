@@ -8,8 +8,8 @@
  * @returns {Promise<Array>} Une promesse qui se résout avec le tableau des parties.
  */
 export async function getAllGames() {
-    const result = await chrome.storage.local.get(['games']);
-    return result.games || [];
+  const result = await chrome.storage.local.get(['games']);
+  return result.games || [];
 }
 
 /**
@@ -18,7 +18,7 @@ export async function getAllGames() {
  * @returns {Promise<void>}
  */
 export async function saveAllGames(games) {
-    await chrome.storage.local.set({ games: games });
+  await chrome.storage.local.set({ games: games });
 }
 
 /**
@@ -27,9 +27,9 @@ export async function saveAllGames(games) {
  * @returns {Promise<void>}
  */
 export async function deleteGameById(gameId) {
-    const allGames = await getAllGames();
-    const updatedGames = allGames.filter(game => game.id !== gameId);
-    await saveAllGames(updatedGames);
+  const allGames = await getAllGames();
+  const updatedGames = allGames.filter((game) => game.id !== gameId);
+  await saveAllGames(updatedGames);
 }
 
 /**
@@ -37,5 +37,5 @@ export async function deleteGameById(gameId) {
  * @returns {Promise<void>}
  */
 export async function clearAllGames() {
-    await saveAllGames([]);
+  await saveAllGames([]);
 }

@@ -1,37 +1,43 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Leaderboards</title>
-    <link rel="stylesheet" href="leaderboard.css">
-</head>
-<body>
+    <link rel="stylesheet" href="leaderboard.css" />
+  </head>
+  <body>
     <div class="container">
-        <div class="header">
-            <h1>Leaderboards</h1>
-            <a href="history.html" class="btn btn-secondary">Retour à l'historique</a>
+      <div class="header">
+        <h1>Leaderboards</h1>
+        <a href="history.html" class="btn btn-secondary"
+          >Retour à l'historique</a
+        >
+      </div>
+
+      <div class="leaderboards-grid">
+        <!-- Classement des Équipes -->
+        <div class="card">
+          <h3>Top Teams (par score moyen)</h3>
+          <ol id="teamsLeaderboard">
+            <li class="loading">Chargement...</li>
+          </ol>
         </div>
 
-        <div class="leaderboards-grid">
-            <!-- Classement des Équipes -->
-            <div class="card">
-                <h3>Top Teams (par score moyen)</h3>
-                <ol id="teamsLeaderboard"><li class="loading">Chargement...</li></ol>
-            </div>
-
-            <!-- Classement des Joueurs -->
-            <div class="card">
-                <h3>Top Players (par score moyen)</h3>
-                <ol id="playersLeaderboard"><li class="loading">Chargement...</li></ol>
-            </div>
+        <!-- Classement des Joueurs -->
+        <div class="card">
+          <h3>Top Players (par score moyen)</h3>
+          <ol id="playersLeaderboard">
+            <li class="loading">Chargement...</li>
+          </ol>
         </div>
+      </div>
 
-        <!-- Section pour les classements par carte -->
-        <div class="map-leaderboards-container" id="mapLeaderboardsContainer">
-            <!-- Le contenu sera généré par leaderboard.js -->
-        </div>
+      <!-- Section pour les classements par carte -->
+      <div class="map-leaderboards-container" id="mapLeaderboardsContainer">
+        <!-- Le contenu sera généré par leaderboard.js -->
+      </div>
     </div>
     <script src="leaderboard.js"></script>
-</body>
+  </body>
 </html>

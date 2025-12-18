@@ -1,210 +1,213 @@
- body {
-     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
-     background-color: #f4f4f5; /* gray-100 */
-     color: #111827; /* gray-900 */
-     margin: 0;
-     min-height: 100vh;
- }
- 
- .container {
-     max-width: 1024px;
-     margin: 0 auto;
-     padding: 24px;
- }
- 
- .header {
-     display: flex;
-     justify-content: space-between;
-     align-items: center;
-     margin-bottom: 24px;
-     padding-bottom: 16px;
-     border-bottom: 1px solid #d1d5db; /* gray-300 */
- }
- 
- h1 {
-     font-size: 1.875rem; /* 3xl */
-     font-weight: 700;
-     margin: 0;
- }
- 
- .header-actions {
-     display: flex;
-     gap: 12px;
- }
- 
- .btn {
-     border-radius: 6px;
-     padding: 8px 16px;
-     font-size: 0.875rem;
-     font-weight: 500;
-     border: 1px solid transparent;
-     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-     cursor: pointer;
-     transition: background-color 0.2s, border-color 0.2s;
-     text-decoration: none;
- }
- 
- .btn-secondary {
-     background-color: #ffffff;
-     color: #374151; /* gray-700 */
-     border-color: #d1d5db; /* gray-300 */
- }
- .btn-secondary:hover {
-     background-color: #f9fafb; /* gray-50 */
- }
- 
- .btn-danger {
-     background-color: #dc2626; /* red-600 */
-     color: #ffffff;
- }
- .btn-danger:hover {
-     background-color: #b91c1c; /* red-700 */
- }
- 
- a {
-     color: #dc2626; /* red-600 */
-     text-decoration: none;
-     font-weight: 500;
- }
- a:hover {
-     text-decoration: underline;
- }
- 
- /* Table Styles */
- .table-container {
-     background-color: #ffffff;
-     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-     border-radius: 8px;
-     overflow-x: auto;
- }
- 
- table {
-     min-width: 100%;
-     border-collapse: collapse;
-     border-spacing: 0;
- }
- 
- thead {
-     background-color: #f9fafb; /* gray-50 */
- }
- 
- th, td {
-     padding: 12px 24px;
-     text-align: left;
-     font-size: 0.875rem;
-     white-space: nowrap;
- }
- 
- th {
-     font-weight: 600;
-     color: #6b7280; /* gray-500 */
-     text-transform: uppercase;
-     letter-spacing: 0.05em;
-     font-size: 0.75rem;
- }
- 
- th.sortable {
-     cursor: pointer;
-     user-select: none;
- }
- th.sortable:hover {
-     color: #111827; /* gray-900 */
- }
- th .sort-arrow {
-     display: inline-block;
-     margin-left: 4px;
-     opacity: 0.3;
- }
- th.sort-asc .sort-arrow,
- th.sort-desc .sort-arrow {
-     opacity: 1;
- }
- th.sort-desc .sort-arrow {
-     transform: rotate(180deg);
- }
- 
- .filter-row input[type="text"] {
-     width: 100%;
-     box-sizing: border-box;
-     padding: 6px 10px;
-     font-size: 0.875rem;
-     border: 1px solid #d1d5db; /* gray-300 */
-     border-radius: 4px;
-     background-color: #f9fafb;
- }
- .filter-row input[type="text"]:focus {
-     outline: none;
-     border-color: #dc2626;
-     box-shadow: 0 0 0 1px #dc2626;
- }
- 
- tbody {
-     background-color: #ffffff;
-     border-top: 1px solid #e5e7eb;
- }
- 
- tr:not(:last-child) {
-     border-bottom: 1px solid #e5e7eb;
- }
- 
- td {
-     color: #4b5563; /* gray-600 */
- }
- 
- td.font-medium {
-     font-weight: 500;
-     color: #111827; /* gray-900 */
- }
- 
- .status-badge {
-     padding: 2px 8px;
-     display: inline-flex;
-     font-size: 0.75rem;
-     font-weight: 600;
-     line-height: 1.25;
-     border-radius: 9999px;
- }
- .status-finished {
-     background-color: #dcfce7; /* green-100 */
-     color: #166534; /* green-800 */
- }
- .status-gaveup {
-     background-color: #fef9c3; /* yellow-100 */
-     color: #854d0e; /* yellow-800 */
- }
- 
- .delete-btn {
-     color: #dc2626; /* red-600 */
-     background: none;
-     border: none;
-     cursor: pointer;
-     font-weight: 500;
- }
- .delete-btn:hover {
-     color: #991b1b; /* red-900 */
- }
- 
- .player-list {
-     display: flex;
-     flex-wrap: wrap;
-     gap: 4px;
- }
- .player-tag {
-     background-color: #e5e7eb; /* gray-200 */
-     color: #374151; /* gray-700 */
-     padding: 2px 8px;
-     border-radius: 9999px;
-     font-size: 0.75rem;
-     font-weight: 500;
- }
- 
- tfoot {
-     background-color: #f9fafb; /* gray-50 */
-     border-top: 2px solid #e5e7eb;
- }
- tfoot td {
-     font-weight: 700;
-     font-size: 0.875rem;
-     color: #111827; /* gray-900 */
- }
- 
+body {
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
+  background-color: #f4f4f5; /* gray-100 */
+  color: #111827; /* gray-900 */
+  margin: 0;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 1024px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #d1d5db; /* gray-300 */
+}
+
+h1 {
+  font-size: 1.875rem; /* 3xl */
+  font-weight: 700;
+  margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn {
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid transparent;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
+  text-decoration: none;
+}
+
+.btn-secondary {
+  background-color: #ffffff;
+  color: #374151; /* gray-700 */
+  border-color: #d1d5db; /* gray-300 */
+}
+.btn-secondary:hover {
+  background-color: #f9fafb; /* gray-50 */
+}
+
+.btn-danger {
+  background-color: #dc2626; /* red-600 */
+  color: #ffffff;
+}
+.btn-danger:hover {
+  background-color: #b91c1c; /* red-700 */
+}
+
+a {
+  color: #dc2626; /* red-600 */
+  text-decoration: none;
+  font-weight: 500;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* Table Styles */
+.table-container {
+  background-color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+table {
+  min-width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+thead {
+  background-color: #f9fafb; /* gray-50 */
+}
+
+th,
+td {
+  padding: 12px 24px;
+  text-align: left;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+th {
+  font-weight: 600;
+  color: #6b7280; /* gray-500 */
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.75rem;
+}
+
+th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+th.sortable:hover {
+  color: #111827; /* gray-900 */
+}
+th .sort-arrow {
+  display: inline-block;
+  margin-left: 4px;
+  opacity: 0.3;
+}
+th.sort-asc .sort-arrow,
+th.sort-desc .sort-arrow {
+  opacity: 1;
+}
+th.sort-desc .sort-arrow {
+  transform: rotate(180deg);
+}
+
+.filter-row input[type='text'] {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 10px;
+  font-size: 0.875rem;
+  border: 1px solid #d1d5db; /* gray-300 */
+  border-radius: 4px;
+  background-color: #f9fafb;
+}
+.filter-row input[type='text']:focus {
+  outline: none;
+  border-color: #dc2626;
+  box-shadow: 0 0 0 1px #dc2626;
+}
+
+tbody {
+  background-color: #ffffff;
+  border-top: 1px solid #e5e7eb;
+}
+
+tr:not(:last-child) {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+td {
+  color: #4b5563; /* gray-600 */
+}
+
+td.font-medium {
+  font-weight: 500;
+  color: #111827; /* gray-900 */
+}
+
+.status-badge {
+  padding: 2px 8px;
+  display: inline-flex;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.25;
+  border-radius: 9999px;
+}
+.status-finished {
+  background-color: #dcfce7; /* green-100 */
+  color: #166534; /* green-800 */
+}
+.status-gaveup {
+  background-color: #fef9c3; /* yellow-100 */
+  color: #854d0e; /* yellow-800 */
+}
+
+.delete-btn {
+  color: #dc2626; /* red-600 */
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+}
+.delete-btn:hover {
+  color: #991b1b; /* red-900 */
+}
+
+.player-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.player-tag {
+  background-color: #e5e7eb; /* gray-200 */
+  color: #374151; /* gray-700 */
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+tfoot {
+  background-color: #f9fafb; /* gray-50 */
+  border-top: 2px solid #e5e7eb;
+}
+tfoot td {
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: #111827; /* gray-900 */
+}

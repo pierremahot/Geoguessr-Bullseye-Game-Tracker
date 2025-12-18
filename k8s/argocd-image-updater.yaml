@@ -14,7 +14,7 @@ spec:
         # Backend Configuration
         - alias: "backend"
           imageName: "wakalou/bullseye-backend"
-        
+
         # Frontend Configuration
         - alias: "frontend"
           imageName: "wakalou/bullseye-frontend"

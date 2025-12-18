@@ -1,155 +1,152 @@
 // GET https://game-server.geoguessr.com/api/lobby/18dd35d7-32b5-4a89-9a32-f8c4a76bf507/join
 {
-    "gameLobbyId": "18dd35d7-32b5-4a89-9a32-f8c4a76bf507",
-    "title": "",
-    "type": "Unrated",
-    "gameType": "Bullseye",
-    "status": "Closed",
-    "numPlayersJoined": 2,
-    "totalSpots": 20,
-    "numOpenSpots": 18,
-    "minPlayersRequired": 2,
-    "playerIds": [
-        "5d5afe4db4ec171bd432ac55",
-        "692e0515735fa457d1fef2c5"
-    ],
-    "players": [
-        {
-            "playerId": "5d5afe4db4ec171bd432ac55",
-            "nick": "Pierre MAHOT",
-            "countryCode": "fr",
-            "isVerified": false,
-            "flair": 0,
-            "avatarPath": "pin/0d3f6806eed7509e8ef898baa8b08e77.png",
-            "level": 14,
-            "titleTierId": 20,
-            "division": "Bronze",
-            "performanceStreak": "None",
-            "rank": {
-                "rank": null,
-                "division": {
-                    "id": 0,
-                    "divisionId": 0,
-                    "tierId": 0
-                }
-            },
-            "team": "blue",
-            "competitive": {
-                "rating": 0,
-                "division": {
-                    "type": 10,
-                    "startRating": 0,
-                    "endRating": 450
-                }
-            },
-            "avatar": {
-                "fullBodyPath": "pin/113c56b311e0a947021dc4595b619984.png"
-            },
-            "isGuest": false,
-            "club": null,
-            "borderUrl": "avatarasseticon/8af91f1b6a40098e73f5c45984109167.webp"
-        },
-        {
-            "playerId": "692e0515735fa457d1fef2c5",
-            "nick": "test",
-            "countryCode": "se",
-            "isVerified": false,
-            "flair": 0,
-            "avatarPath": "pin/aaa239a47f04973abb25c2201646d931.png",
-            "level": 0,
-            "titleTierId": 0,
-            "division": "Bronze",
-            "performanceStreak": "None",
-            "rank": {
-                "rank": null,
-                "division": {
-                    "id": 0,
-                    "divisionId": 0,
-                    "tierId": 0
-                }
-            },
-            "team": "red",
-            "competitive": {
-                "rating": 0,
-                "division": {
-                    "type": 0,
-                    "startRating": 0,
-                    "endRating": 0
-                }
-            },
-            "avatar": {
-                "fullBodyPath": "pin/c858308e0734c2fea315ff8f7e7f080f.png"
-            },
-            "isGuest": true,
-            "club": null,
-            "borderUrl": null
+  "gameLobbyId": "18dd35d7-32b5-4a89-9a32-f8c4a76bf507",
+  "title": "",
+  "type": "Unrated",
+  "gameType": "Bullseye",
+  "status": "Closed",
+  "numPlayersJoined": 2,
+  "totalSpots": 20,
+  "numOpenSpots": 18,
+  "minPlayersRequired": 2,
+  "playerIds": ["5d5afe4db4ec171bd432ac55", "692e0515735fa457d1fef2c5"],
+  "players": [
+    {
+      "playerId": "5d5afe4db4ec171bd432ac55",
+      "nick": "Pierre MAHOT",
+      "countryCode": "fr",
+      "isVerified": false,
+      "flair": 0,
+      "avatarPath": "pin/0d3f6806eed7509e8ef898baa8b08e77.png",
+      "level": 14,
+      "titleTierId": 20,
+      "division": "Bronze",
+      "performanceStreak": "None",
+      "rank": {
+        "rank": null,
+        "division": {
+          "id": 0,
+          "divisionId": 0,
+          "tierId": 0
         }
-    ],
-    "visibility": "Private",
-    "closingTime": "2025-12-01T22:24:59.1254509Z",
-    "timestamp": "2025-12-01T22:25:00.1265274+00:00",
-    "owner": "5d5afe4db4ec171bd432ac55",
-    "host": {
-        "playerId": "5d5afe4db4ec171bd432ac55",
-        "nick": "Pierre MAHOT",
-        "countryCode": "fr",
-        "isVerified": false,
-        "flair": 0,
-        "avatarPath": "pin/0d3f6806eed7509e8ef898baa8b08e77.png",
-        "level": 14,
-        "titleTierId": 20,
-        "division": "Bronze",
-        "performanceStreak": "None",
-        "rank": {
-            "rank": null,
-            "division": {
-                "id": 0,
-                "divisionId": 0,
-                "tierId": 0
-            }
-        },
-        "team": "blue",
-        "competitive": {
-            "rating": 0,
-            "division": {
-                "type": 10,
-                "startRating": 0,
-                "endRating": 450
-            }
-        },
-        "avatar": {
-            "fullBodyPath": "pin/113c56b311e0a947021dc4595b619984.png"
-        },
-        "isGuest": false,
-        "club": null,
-        "borderUrl": "avatarasseticon/8af91f1b6a40098e73f5c45984109167.webp"
+      },
+      "team": "blue",
+      "competitive": {
+        "rating": 0,
+        "division": {
+          "type": 10,
+          "startRating": 0,
+          "endRating": 450
+        }
+      },
+      "avatar": {
+        "fullBodyPath": "pin/113c56b311e0a947021dc4595b619984.png"
+      },
+      "isGuest": false,
+      "club": null,
+      "borderUrl": "avatarasseticon/8af91f1b6a40098e73f5c45984109167.webp"
     },
-    "isAutoStarted": false,
-    "canBeStartedManually": false,
-    "isRated": false,
-    "competitionId": "",
-    "partyId": "17c62549-f2ee-4e30-9e0e-c91edf3e8604",
-    "gameOptions": {
-        "forbidMoving": false,
-        "forbidZooming": false,
-        "forbidRotating": false,
-        "mapSlug": "5b0d907bfaa4cf3ce43bc6b1",
-        "roundTime": 0,
-        "guessMapType": "roadmap"
+    {
+      "playerId": "692e0515735fa457d1fef2c5",
+      "nick": "test",
+      "countryCode": "se",
+      "isVerified": false,
+      "flair": 0,
+      "avatarPath": "pin/aaa239a47f04973abb25c2201646d931.png",
+      "level": 0,
+      "titleTierId": 0,
+      "division": "Bronze",
+      "performanceStreak": "None",
+      "rank": {
+        "rank": null,
+        "division": {
+          "id": 0,
+          "divisionId": 0,
+          "tierId": 0
+        }
+      },
+      "team": "red",
+      "competitive": {
+        "rating": 0,
+        "division": {
+          "type": 0,
+          "startRating": 0,
+          "endRating": 0
+        }
+      },
+      "avatar": {
+        "fullBodyPath": "pin/c858308e0734c2fea315ff8f7e7f080f.png"
+      },
+      "isGuest": true,
+      "club": null,
+      "borderUrl": null
+    }
+  ],
+  "visibility": "Private",
+  "closingTime": "2025-12-01T22:24:59.1254509Z",
+  "timestamp": "2025-12-01T22:25:00.1265274+00:00",
+  "owner": "5d5afe4db4ec171bd432ac55",
+  "host": {
+    "playerId": "5d5afe4db4ec171bd432ac55",
+    "nick": "Pierre MAHOT",
+    "countryCode": "fr",
+    "isVerified": false,
+    "flair": 0,
+    "avatarPath": "pin/0d3f6806eed7509e8ef898baa8b08e77.png",
+    "level": 14,
+    "titleTierId": 20,
+    "division": "Bronze",
+    "performanceStreak": "None",
+    "rank": {
+      "rank": null,
+      "division": {
+        "id": 0,
+        "divisionId": 0,
+        "tierId": 0
+      }
     },
-    "createdAt": "2025-12-01T22:24:59.1254499Z",
-    "shareLink": "https://www.geoguessr.com/bullseye/18dd35d7-32b5-4a89-9a32-f8c4a76bf507",
-    "teams": [],
-    "groupEventId": "",
-    "quizId": "",
-    "hostParticipates": true,
-    "isSinglePlayer": false,
-    "tripId": "",
-    "blueprintId": null,
-    "tournament": null,
-    "allowedCommunication": "TextMessages",
-    "accessToken": "H26VMivgsf2APtTxL0ZA1SvRVtQDmvL2T8oC8xXiKpY=",
-    "mapName": "500 000 lieux en France métropolitaine !",
-    "gameContext": "party_v2",
-    "competitiveGameMode": "None"
+    "team": "blue",
+    "competitive": {
+      "rating": 0,
+      "division": {
+        "type": 10,
+        "startRating": 0,
+        "endRating": 450
+      }
+    },
+    "avatar": {
+      "fullBodyPath": "pin/113c56b311e0a947021dc4595b619984.png"
+    },
+    "isGuest": false,
+    "club": null,
+    "borderUrl": "avatarasseticon/8af91f1b6a40098e73f5c45984109167.webp"
+  },
+  "isAutoStarted": false,
+  "canBeStartedManually": false,
+  "isRated": false,
+  "competitionId": "",
+  "partyId": "17c62549-f2ee-4e30-9e0e-c91edf3e8604",
+  "gameOptions": {
+    "forbidMoving": false,
+    "forbidZooming": false,
+    "forbidRotating": false,
+    "mapSlug": "5b0d907bfaa4cf3ce43bc6b1",
+    "roundTime": 0,
+    "guessMapType": "roadmap"
+  },
+  "createdAt": "2025-12-01T22:24:59.1254499Z",
+  "shareLink": "https://www.geoguessr.com/bullseye/18dd35d7-32b5-4a89-9a32-f8c4a76bf507",
+  "teams": [],
+  "groupEventId": "",
+  "quizId": "",
+  "hostParticipates": true,
+  "isSinglePlayer": false,
+  "tripId": "",
+  "blueprintId": null,
+  "tournament": null,
+  "allowedCommunication": "TextMessages",
+  "accessToken": "H26VMivgsf2APtTxL0ZA1SvRVtQDmvL2T8oC8xXiKpY=",
+  "mapName": "500 000 lieux en France métropolitaine !",
+  "gameContext": "party_v2",
+  "competitiveGameMode": "None"
 }

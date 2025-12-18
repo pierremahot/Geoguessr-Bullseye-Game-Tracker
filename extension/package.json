@@ -3,7 +3,13 @@
   "module": "index.ts",
   "type": "module",
   "devDependencies": {
-    "bun-types": "latest"
+    "@typescript-eslint/eslint-plugin": "^8.50.0",
+    "@typescript-eslint/parser": "^8.50.0",
+    "bun-types": "latest",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.7.4",
+    "typescript-eslint": "^8.50.0"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
@@ -16,6 +22,8 @@
     "dev:js": "bun build ./src/pages/stats.js ./src/pages/history.js ./src/pages/popup.js ./src/pages/leaderboard.js ./src/pages/options.js --outdir ./dist/pages --no-minify --sourcemap=inline && bun build ./src/scripts/content.js ./src/scripts/inject.js --outdir ./dist/scripts --no-minify --sourcemap=inline",
     "build:copy": "cp ./src/manifest.json ./dist/ && cp -r ./src/pages/*.html ./dist/pages/ && cp -r ./src/pages/*.css ./dist/pages/ && cp -r ./src/icons ./dist/",
     "build": "rm -rf ./dist && mkdir -p ./dist/pages && mkdir -p ./dist/scripts && bun run build:js && bun run build:copy",
-    "dev": "rm -rf ./dist && mkdir -p ./dist/pages && mkdir -p ./dist/scripts && bun run dev:js && bun run build:copy"
+    "dev": "rm -rf ./dist && mkdir -p ./dist/pages && mkdir -p ./dist/scripts && bun run dev:js && bun run build:copy",
+    "lint": "eslint . --fix",
+    "format": "prettier --write ."
   }
 }
